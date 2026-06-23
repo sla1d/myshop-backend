@@ -7,10 +7,16 @@ logger = logging.getLogger(__name__)
 
 
 @celery_app.task(bind=True, name="tasks.send_order_notification")
-def send_order_notification(self, order_id: int, user_email: str, total: int):
-    """Отправить уведомление о заказе (имитация email)."""
+def send_order_notification(self, order_id: int, user_email: str, total: int, chat_id: int | None = None):
+    """Отправить уведомление о заказе."""
     logger.info("📧 Отправка уведомления о заказе #%d на %s (сумма: %d ₽)", order_id, user_email, total)
-    # В реальном проекте: SMTP / SendGrid / SES
+
+    # Telegram уведомление
+    if chat_id:
+        import asyncio
+        from app.services.telegram import notify_order_created
+        asyncio.run(notify_order_created(chat_id, order_id, total, ""))
+
     return {"status": "sent", "order_id": order_id, "email": user_email}
 
 

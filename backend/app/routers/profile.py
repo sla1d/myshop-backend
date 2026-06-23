@@ -11,12 +11,17 @@ from app.models.order import Order
 from app.models.user import User
 from app.schemas.order import OrderAdmin, OrderItemAdmin
 from app.schemas.profile import PasswordChange, ProfileResponse, ProfileUpdate
+from app.services.telegram import notify_order_created
 
 router = APIRouter(prefix="/profile", tags=["Профиль"])
 
 
 class MessageResponse(BaseModel):
     detail: str
+
+
+class TelegramLink(BaseModel):
+    chat_id: int
 
 
 @router.get("", response_model=ProfileResponse)
@@ -88,3 +93,16 @@ async def get_my_orders(
         )
         for o in orders
     ]
+
+
+@router.post("/link-telegram", response_model=MessageResponse)
+async def link_telegram(
+    body: TelegramLink,
+    user: User = Depends(get_current_user),
+):
+    """Привязать Telegram для уведомлений."""
+    from app.services.telegram import send_message
+    success = await send_message(body.chat_id, "✅ Telegram привязан к вашему магазину!")
+    if not success:
+        raise HTTPException(status_code=400, detail="Не удалось отправить сообщение")
+    return MessageResponse(detail="Telegram привязан")

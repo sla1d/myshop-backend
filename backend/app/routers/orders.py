@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.rabbitmq import publish
+from app.core.websocket import manager
 from app.database.connection import get_async_session
 from app.models.user import User
 from app.schemas.order import OrderResponse
@@ -54,4 +55,13 @@ async def create_order(
         logger.warning("Не удалось запустить задачу уведомления")
 
     logger.info("Заказ #%s создан: user=%d, total=%s ₽", result["order_id"], user.id, result["total"])
+
+    # WebSocket уведомление
+    await manager.send(user.id, {
+        "type": "order_created",
+        "order_id": result["order_id"],
+        "total": result["total"],
+        "address": body.address,
+    })
+
     return OrderResponse(status="ok", order_id=result["order_id"], total=result["total"])

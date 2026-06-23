@@ -24,7 +24,7 @@ from app.middleware.license import LicenseMiddleware
 from app.models.product import Product
 from app.models.promo import PromoCode
 from app.models.user import User
-from app.routers import admin, auth, cart, licenses, orders, products, profile, promos, reviews, superadmin, upload, wishlist
+from app.routers import admin, analytics, auth, cart, licenses, marketplace, orders, products, profile, promos, reviews, superadmin, upload, wishlist, ws
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BACKEND_DIR.parent / "frontend"
@@ -214,7 +214,9 @@ Authorization: Bearer <access_token>
 
     app.include_router(auth.router)
     app.include_router(admin.router, prefix="/api")
+    app.include_router(analytics.router, prefix="/api")
     app.include_router(licenses.router, prefix="/api")
+    app.include_router(marketplace.router, prefix="/api")
     app.include_router(superadmin.router, prefix="/api")
     app.include_router(products.router, prefix="/api")
     app.include_router(cart.router, prefix="/api")
@@ -224,6 +226,7 @@ Authorization: Bearer <access_token>
     app.include_router(reviews.router, prefix="/api")
     app.include_router(upload.router, prefix="/api")
     app.include_router(wishlist.router, prefix="/api")
+    app.include_router(ws.router)
 
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
