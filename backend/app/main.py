@@ -7,15 +7,18 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from datetime import datetime, timedelta, timezone
 
 from app.core.cache import cache_close
 from app.core.config import settings
+from app.core.logging import setup_logging
+from app.core.middleware import AccessLogMiddleware, ExceptionLoggingMiddleware
 from app.core.rabbitmq import close as rabbitmq_close
 from app.core.security import hash_password
 from app.database.connection import async_session_factory, engine
+from app.exceptions import register_exception_handlers
 from app.models.product import Product
 from app.models.promo import PromoCode
 from app.models.user import User
@@ -24,14 +27,6 @@ from app.routers import admin, auth, cart, orders, products, profile, promos, re
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BACKEND_DIR.parent / "frontend"
 UPLOAD_DIR = BACKEND_DIR.parent / "uploads"
-
-
-async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    """Обработка HTTP ошибок — красивый JSON."""
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
-    )
 
 
 async def _seed_data():
@@ -92,25 +87,16 @@ async def _seed_data():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения."""
-    os.makedirs(settings.LOG_DIR, exist_ok=True)
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[
-            logging.FileHandler(settings.LOG_FILE),
-            logging.StreamHandler(),
-        ],
-    )
-
+    logger = setup_logging(settings.LOG_DIR)
     await _seed_data()
-    logging.info("MyShop API запущен")
+    logger.info("MyShop API запущен")
 
     yield
 
     await engine.dispose()
     await cache_close()
     rabbitmq_close()
-    logging.info("MyShop API остановлен")
+    logger.info("MyShop API остановлен")
 
 
 def create_application() -> FastAPI:
@@ -118,9 +104,46 @@ def create_application() -> FastAPI:
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
+        description="""
+## MyShop API — Backend для интернет-магазина электроники
+
+### Возможности
+- JWT авторизация (access + refresh токены)
+- Ролевая модель: `user` / `admin`
+- CRUD товаров с поиском, фильтрами (категория, бренд, рейтинг, цена) и сортировкой
+- Корзина, заказы с промокодами
+- Система отзывов и избранного
+- Админ-панель: статистика, управление товарами/пользователями/заказами/промокодами
+- Загрузка изображений товаров
+- Redis кэширование
+- RabbitMQ очередь сообщений
+- Celery фоновые задачи
+
+### Авторизация
+Все защищённые эндпоинты требуют заголовок:
+```
+Authorization: Bearer <access_token>
+```
+
+### Тестовые данные
+При первом запуске создаётся:
+- **admin** / `admin123` (role=admin)
+- 20 товаров, 3 промокода
+        """,
         docs_url="/docs",
         redoc_url="/redoc",
         lifespan=lifespan,
+        openapi_tags=[
+            {"name": "Авторизация", "description": "Регистрация, вход, обновление токенов"},
+            {"name": "Товары", "description": "Каталог товаров с поиском, фильтрами, сортировкой"},
+            {"name": "Корзина", "description": "Управление корзиной (добавление, изменение, удаление)"},
+            {"name": "Заказы", "description": "Создание заказов с промокодами"},
+            {"name": "Избранное", "description": "Список избранных товаров"},
+            {"name": "Отзывы", "description": "Отзывы на товары"},
+            {"name": "Промокоды", "description": "Проверка и применение промокодов"},
+            {"name": "Профиль", "description": "Личные данные и история заказов"},
+            {"name": "Админ", "description": "Управление товарами, пользователями, заказами, промокодами"},
+        ],
     )
 
     app.add_middleware(
@@ -131,7 +154,29 @@ def create_application() -> FastAPI:
         allow_headers=settings.CORS_ALLOW_HEADERS,
     )
 
-    app.add_exception_handler(HTTPException, _http_exception_handler)
+    app.add_middleware(ExceptionLoggingMiddleware)
+    app.add_middleware(AccessLogMiddleware)
+
+    register_exception_handlers(app)
+
+    @app.get("/health")
+    async def health_check():
+        """Health check: DB + Redis + RabbitMQ."""
+        status = {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+        try:
+            async with async_session_factory() as session:
+                await session.execute(text("SELECT 1"))
+            status["database"] = "ok"
+        except Exception:
+            status["database"] = "error"
+            status["status"] = "degraded"
+        from app.core.cache import cache_get
+        try:
+            await cache_get("health")
+            status["redis"] = "ok"
+        except Exception:
+            status["redis"] = "unavailable"
+        return status
 
     app.include_router(auth.router)
     app.include_router(admin.router, prefix="/api")

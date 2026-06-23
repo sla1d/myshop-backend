@@ -53,4 +53,5 @@ async def create_order(
     except Exception:
         logger.warning("Не удалось запустить задачу уведомления")
 
+    logger.info("Заказ #%s создан: user=%d, total=%s ₽", result["order_id"], user.id, result["total"])
     return OrderResponse(status="ok", order_id=result["order_id"], total=result["total"])

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -14,6 +16,7 @@ from app.database.connection import get_async_session
 from app.models.user import User
 
 router = APIRouter(tags=["Авторизация"])
+logger = logging.getLogger("myshop.auth")
 
 
 class TokenResponse(BaseModel):
@@ -45,6 +48,7 @@ async def register(
     user = User(username=username, password=hash_password(password))
     session.add(user)
     await session.commit()
+    logger.info("Зарегистрирован: %s", username)
     return {"status": "ok"}
 
 
@@ -66,6 +70,7 @@ async def login(
     access = create_access_token({"sub": str(user.id)})
     refresh = create_refresh_token({"sub": str(user.id)})
 
+    logger.info("Вход: %s (role=%s)", user.username, user.role)
     return TokenResponse(
         access_token=access,
         refresh_token=refresh,

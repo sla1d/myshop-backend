@@ -28,7 +28,8 @@ async def validate_promo(
         raise HTTPException(status_code=404, detail="Промокод не найден")
     if not promo.active:
         raise HTTPException(status_code=400, detail="Промокод деактивирован")
-    if promo.valid_until < datetime.now(timezone.utc):
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if promo.valid_until.replace(tzinfo=None) < now:
         raise HTTPException(status_code=400, detail="Промокод истёк")
     if promo.max_uses > 0 and promo.used_count >= promo.max_uses:
         raise HTTPException(status_code=400, detail="Промокод использован максимальное количество раз")

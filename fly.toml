@@ -1,0 +1,28 @@
+app = "myshop-backend"
+primary_region = "ams"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  DATABASE_URL = "sqlite+aiosqlite:///./shop.db"
+  REDIS_URL = "redis://localhost:6379/0"
+  RABBITMQ_URL = "amqp://guest:guest@localhost:5672/"
+  HOST = "0.0.0.0"
+  PORT = "8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.check]
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+
+[[mounts]]
+  source = "uploads_data"
+  destination = "/app/uploads"

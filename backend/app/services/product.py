@@ -1,8 +1,12 @@
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import cache_delete, cache_get, cache_set
 from app.models.product import Product
+
+logger = logging.getLogger("myshop.products")
 
 SORT_MAP = {
     "price_asc": Product.price.asc(),

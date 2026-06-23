@@ -35,7 +35,8 @@ class OrderService:
                 select(PromoCode).where(PromoCode.code == promo_code.upper())
             )
             promo = promo_result.scalar_one_or_none()
-            if promo and promo.active and promo.valid_until >= datetime.now(timezone.utc):
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+            if promo and promo.active and promo.valid_until.replace(tzinfo=None) >= now:
                 if promo.max_uses == 0 or promo.used_count < promo.max_uses:
                     discount = total * promo.discount_percent // 100
                     promo.used_count += 1

@@ -1,262 +1,171 @@
-# Интернет-магазин MyShop
+# MyShop API
 
-Одностраничное приложение интернет-магазина, созданное с использованием:
-- **HTML5, CSS3 и JavaScript** для фронтенда
-- **FastAPI** для бэкенда
-- **Python** для серверной части
+Backend для интернет-магазина электроники. FastAPI + PostgreSQL + Redis + RabbitMQ + Celery.
+
+## Стек
+
+| Компонент | Технология |
+|---|---|
+| Framework | FastAPI 0.104+ |
+| ORM | SQLAlchemy 2.0 (async) |
+| БД | PostgreSQL 16 (prod) / SQLite (dev) |
+| Миграции | Alembic |
+| Авторизация | JWT (access + refresh), bcrypt |
+| Кэширование | Redis |
+| Очереди | RabbitMQ (pika) |
+| Фоновые задачи | Celery |
+| Тестирование | pytest + pytest-asyncio |
+| CI/CD | GitHub Actions |
+| Контейнеризация | Docker Compose |
+
+## Быстрый старт
+
+```bash
+# 1. Клонировать
+git clone https://github.com/sla1d/myshop-backend.git
+cd myshop-backend
+
+# 2. Виртуальное окружение
+python -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+
+# 3. Миграции
+cd backend
+alembic upgrade head
+
+# 4. Запуск
+python run.py
+```
+
+Приложение: http://localhost:8000
+Swagger: http://localhost:8000/docs
+ReDoc: http://localhost:8000/redoc
+
+## Docker
+
+```bash
+docker-compose up -d
+```
+
+Сервисы: backend (8000), PostgreSQL (5432), Redis (6379), RabbitMQ (5672/15672), Celery worker + beat.
+
+## API Endpoints
+
+### Авторизация
+| Метод | Путь | Описание |
+|---|---|---|
+| POST | `/register` | Регистрация |
+| POST | `/login` | Вход → access + refresh токены |
+| POST | `/refresh` | Обновление токена |
+
+### Товары
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/products` | Список товаров (search, category, brand, min_price, max_price, min_rating, sort) |
+| GET | `/api/products/{id}` | Товар по ID |
+| GET | `/api/products/categories` | Список категорий |
+| GET | `/api/products/brands` | Список брендов |
+
+### Корзина (🔒)
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/cart` | Получить корзину |
+| POST | `/api/cart/add` | Добавить товар |
+| PUT | `/api/cart/item/{id}` | Изменить количество |
+| DELETE | `/api/cart/remove` | Удалить товар |
+| DELETE | `/api/cart/clear` | Очистить корзину |
+
+### Заказы (🔒)
+| Метод | Путь | Описание |
+|---|---|---|
+| POST | `/api/order` | Создать заказ (промокод опционален) |
+
+### Избранное (🔒)
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/wishlist` | Список избранного |
+| POST | `/api/wishlist` | Добавить |
+| DELETE | `/api/wishlist/{id}` | Удалить |
+| GET | `/api/wishlist/check/{id}` | Проверить |
+
+### Отзывы
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/reviews/product/{id}` | Отзывы товара |
+| GET | `/api/reviews/product/{id}/avg` | Средний рейтинг |
+| POST | `/api/reviews` | Создать отзыв (🔒) |
+
+### Промокоды
+| Метод | Путь | Описание |
+|---|---|---|
+| POST | `/api/promos/validate` | Проверить промокод |
+
+### Профиль (🔒)
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/profile` | Данные профиля |
+| PATCH | `/api/profile` | Обновить профиль |
+| POST | `/api/profile/change-password` | Сменить пароль |
+| GET | `/api/profile/orders` | История заказов |
+
+### Админ (🔒 admin)
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/admin/stats` | Статистика |
+| GET | `/api/admin/users` | Список пользователей |
+| PATCH | `/api/admin/users/{id}/role` | Изменить роль |
+| GET | `/api/admin/products` | Товары |
+| POST | `/api/admin/products` | Создать товар |
+| PUT | `/api/admin/products/{id}` | Обновить товар |
+| DELETE | `/api/admin/products/{id}` | Удалить товар |
+| GET | `/api/admin/orders` | Заказы |
+| PATCH | `/api/admin/orders/{id}/status` | Статус заказа |
+| GET | `/api/admin/promos` | Промокоды |
+| POST | `/api/admin/promos` | Создать промокод |
+| POST | `/api/upload` | Загрузить изображение |
+
+## Тестовые данные
+
+| Пользователь | Пароль | Роль |
+|---|---|---|
+| `admin` | `admin123` | admin |
+
+Промокоды: `SALE10` (10%), `WELCOME20` (20%), `SUMMER15` (15%).
+
+## Тесты
+
+```bash
+cd backend
+PYTHONPATH=. pytest tests/ -v
+```
+
+51 тест: auth, products, cart, orders, reviews, wishlist, promos, admin.
 
 ## Структура проекта
 
 ```
-MyShop/
-├── index.html                    # Фронтенд (одностраничное приложение)
-├── main.py                       # FastAPI сервер
-├── test_api.py                   # Тестовый скрипт для API
-├── requirements.txt              # Зависимости Python
-└── README.md                     # Эта документация
+backend/
+├── app/
+│   ├── core/           # config, security, cache, rabbitmq, celery, logging, middleware
+│   ├── database/       # engine, session, base
+│   ├── models/         # SQLAlchemy ORM
+│   ├── schemas/        # Pydantic
+│   ├── routers/        # API endpoints
+│   ├── services/       # Business logic
+│   ├── tasks/          # Celery tasks
+│   ├── exceptions.py   # Custom exceptions
+│   └── main.py         # App factory
+├── tests/              # pytest tests
+├── alembic/            # Migrations
+├── Dockerfile
+└── requirements.txt
+frontend/
+├── index.html
+├── css/style.css
+└── js/app.js
 ```
-
-## Как запустить
-
-### 1. Установка зависимостей
-
-**Для Python (сервер):**
-```bash
-cd MyShop
-pip install -r requirements.txt
-```
-
-**Для браузера (фронтенд):**
-Откройте `index.html` в любом современном веб-браузере.
-
-### 2. Запуск сервера
-
-```bash
-cd MyShop
-python main.py
-```
-
-Сервер будет запущен на порту 8000.
-
-### 3. Тестирование API
-
-```bash
-cd MyShop
-python test_api.py
-```
-
-## Функциональность
-
-### Фронтенд (index.html)
-
-- **Адаптивный дизайн** для мобильных и десктопных устройств
-- **Темная тема** в стиле современных IT-сайтов
-- **Каталог товаров** с реальными изображениями
-- **Корзина покупок** с возможностью добавления, удаления и изменения количества
-- **Авторизация** (вход/регистрация) с использованием localStorage
-- **Smooth скроллинг** между разделами
-- **Toast уведомления** для обратной связи
-- **Защита от двойного клика** на кнопке "В корзину"
-
-### Бэкенд (main.py)
-
-- **FastAPI сервер** на порту 8000
-- **CORS middleware** для кросс-доменных запросов
-- **RESTful API**:
-  - `GET /api/products` - Получить все товары
-  - `GET /api/products/{id}` - Получить товар по ID
-  - `GET /api/products/category/{category}` - Получить товары по категории
-- **Товары хранятся в памяти** (список словарей)
-- **JSON ответы** со структурой: id, name, price, image, category
-
-### API Endpoints
-
-#### GET /api/products
-Возвращает список всех товаров.
-
-**Пример ответа:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Смартфон X",
-    "price": 29999,
-    "image": "https://picsum.photos/seed/smartphone/300/300",
-    "category": "electronics"
-  }
-]
-```
-
-#### GET /api/products/{product_id}
-Возвращает товар по его ID.
-
-#### GET /api/products/category/{category}
-Возвращает товары по указанной категории.
-
-#### POST /api/register
-Регистрирует нового пользователя.
-
-**Пример запроса:**
-```json
-{
-  "username": "newuser",
-  "password": "password123"
-}
-```
-
-**Пример ответа:**
-```json
-{
-  "status": "ok"
-}
-```
-
-#### POST /api/login
-Аутентифицирует пользователя.
-
-**Пример запроса:**
-```json
-{
-  "username": "newuser",
-  "password": "password123"
-}
-```
-
-**Пример успешного ответа:**
-```json
-{
-  "status": "ok",
-  "username": "newuser"
-}
-```
-
-**Пример ошибки:**
-```json
-{
-  "detail": "Неверные данные"
-}
-```
-
-#### GET /api/cart
-Получает корзину пользователя.
-
-**Пример запроса:**
-```
-GET /api/cart?username=newuser
-```
-
-**Пример успешного ответа:**
-```json
-{
-  "1": 2,
-  "3": 1
-}
-```
-
-**Пример ошибки:**
-```json
-{
-  "detail": "Пользователь не авторизован"
-}
-```
-
-#### POST /api/cart/add
-Добавляет товар в корзину пользователя.
-
-**Пример запроса:**
-```
-POST /api/cart/add?username=newuser
-```
-
-**Тело запроса:**
-```json
-{
-  "product_id": 1,
-  "quantity": 2
-}
-```
-
-**Пример успешного ответа:**
-```json
-{
-  "1": 2,
-  "3": 1
-}
-```
-
-#### DELETE /api/cart/remove
-Удаляет товар из корзины пользователя.
-
-**Пример запроса:**
-```
-DELETE /api/cart/remove?username=newuser&product_id=1
-```
-
-**Пример успешного ответа:**
-```json
-{
-  "status": "ok",
-  "cart": {}
-}
-```
-
-#### POST /api/order
-Создает заказ для пользователя.
-
-**Пример запроса:**
-```
-POST /api/order?username=newuser
-```
-
-**Тело запроса:**
-```json
-{
-  "address": "г. Москва, ул. Тестовая, д. 1"
-}
-```
-
-**Пример успешного ответа:**
-```json
-{
-  "status": "ok",
-  "order_id": 1,
-  "total": 29999
-}
-```
-
-**Пример ошибки:**
-```json
-{
-  "detail": "Корзина пуста"
-}
-```
-
-### Технологии
-
-**Фронтенд:**
-- HTML5, CSS3 (с современными функциями)
-- Vanilla JavaScript
-- Font Awesome (иконки)
-- localStorage (хранение данных)
-
-**Бэкенд:**
-- FastAPI
-- Pydantic (валидация данных)
-- uvicorn (ASGI сервер)
-- Python 3.7+
-
-## Особенности
-
-1. **Один файл фронтенда:** Все функциональность фронтенда находится в `index.html`
-2. **Полная автономность:** Сервер и фронтенд работают независимо
-3. **CORS поддержка:** Фронтенд может обращаться к API без ограничений
-4. **Адаптивность:** Работает на всех устройствах
-5. **Производительность:** Оптимизированный код без лишних зависимостей
-
-## Демо
-
-После запуска сервера откройте `http://localhost:8000/index.html` в браузере.
 
 ## Лицензия
 
-Этот проект создан для образовательных целей.
+MIT
