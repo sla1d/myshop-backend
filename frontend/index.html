@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyShop - Интернет-магазин</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo" onclick="showSection('home')">
+                    <i class="fas fa-shopping-bag"></i> MyShop
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#" onclick="showSection('home')" class="nav-link">Главная</a></li>
+                    <li><a href="#" onclick="showSection('catalog')" class="nav-link">Каталог</a></li>
+                    <li><a href="#" onclick="showSection('cart')" class="nav-link">Корзина</a></li>
+                    <li id="wishlist-link" style="display: none;"><a href="#" onclick="showSection('wishlist')" class="nav-link">Избранное</a></li>
+                    <li id="admin-link" style="display: none;"><a href="#" onclick="showSection('admin')" class="nav-link">Админ</a></li>
+                    <li id="profile-link" style="display: none;"><a href="#" onclick="showSection('profile')" class="nav-link">Профиль</a></li>
+                    <li id="auth-link"><a href="#" onclick="showAuthModal()">Вход</a></li>
+                </ul>
+                <div class="user-info" id="user-info" style="display: none;">
+                    <span class="username" id="header-username"></span>
+                    <button class="logout-btn" onclick="logout()">Выйти</button>
+                </div>
+                <a href="#" class="cart-icon" onclick="showSection('cart')">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="active">
+            <div class="hero">
+                <div class="container">
+                    <div class="hero-content">
+                        <h1>Добро пожаловать в MyShop</h1>
+                        <p>Откройте для себя тысячи товаров по лучшим ценам</p>
+                        <a href="#" class="cta-button" onclick="showSection('catalog')">
+                            Перейти в каталог
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="catalog">
+            <div class="container">
+                <h2 class="section-title">Каталог товаров</h2>
+                <div class="search-bar">
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Поиск товаров..." oninput="debounceSearch()">
+                    </div>
+                    <select id="category-filter" onchange="loadFilteredProducts()">
+                        <option value="">Все категории</option>
+                    </select>
+                    <select id="brand-filter" onchange="loadFilteredProducts()">
+                        <option value="">Все бренды</option>
+                    </select>
+                    <select id="rating-filter" onchange="loadFilteredProducts()">
+                        <option value="">Любой рейтинг</option>
+                        <option value="4.5">4.5+</option>
+                        <option value="4.0">4.0+</option>
+                        <option value="3.5">3.5+</option>
+                    </select>
+                    <select id="sort-filter" onchange="loadFilteredProducts()">
+                        <option value="">Сортировка</option>
+                        <option value="newest">Новинки</option>
+                        <option value="price_asc">Цена ↑</option>
+                        <option value="price_desc">Цена ↓</option>
+                        <option value="rating">Рейтинг</option>
+                        <option value="name">По названию</option>
+                    </select>
+                </div>
+                <div class="products-grid" id="products-grid"></div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Загрузка товаров...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="product-detail">
+            <div class="container">
+                <a href="#" onclick="showSection('catalog')" style="color:var(--primary-color);"><i class="fas fa-arrow-left"></i> Назад в каталог</a>
+                <div class="product-detail-layout" id="product-detail-content"></div>
+                <h3 style="margin-top:2rem;">Отзывы</h3>
+                <div id="product-reviews"></div>
+            </div>
+        </section>
+
+        <section id="wishlist">
+            <div class="container">
+                <h2 class="section-title">Избранное</h2>
+                <div class="products-grid" id="wishlist-grid"></div>
+            </div>
+        </section>
+
+        <section id="cart">
+            <div class="container">
+                <h2 class="section-title">Корзина</h2>
+                <div class="cart-items" id="cart-items">
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Ваша корзина пуста</p>
+                    </div>
+                </div>
+                <div class="cart-total" id="cart-total" style="display: none;">
+                    <div class="promo-row">
+                        <input type="text" id="promo-input" placeholder="Промокод" style="padding:0.6rem 1rem;border-radius:8px;border:1px solid var(--border-color);background:var(--darker-bg);color:var(--text-primary);flex:1;">
+                        <button class="btn-sm primary" onclick="applyPromo()">Применить</button>
+                    </div>
+                    <div class="total-info">
+                        <span class="total-label">Товаров: <strong id="total-items">0</strong></span>
+                        <span class="total-label" style="margin-left:1.5rem;">Итого:</span>
+                        <span class="total-amount" id="total-amount">0 ₽</span>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="clear-cart-btn" onclick="clearCart()">
+                            <i class="fas fa-trash"></i> Очистить
+                        </button>
+                        <button class="checkout-btn" onclick="checkout()">
+                            <i class="fas fa-credit-card"></i> Оформить заказ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="admin">
+            <div class="container">
+                <h2 class="section-title">Админ-панель</h2>
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="adminTab('stats')">Статистика</button>
+                    <button class="admin-tab" onclick="adminTab('products')">Товары</button>
+                    <button class="admin-tab" onclick="adminTab('users')">Пользователи</button>
+                    <button class="admin-tab" onclick="adminTab('orders')">Заказы</button>
+                </div>
+                <div id="admin-content"></div>
+            </div>
+        </section>
+
+        <section id="profile">
+            <div class="container">
+                <h2 class="section-title">Мой профиль</h2>
+                <div class="profile-layout">
+                    <div class="profile-form-card">
+                        <h3>Личные данные</h3>
+                        <div class="admin-form" id="profile-form">
+                            <div class="form-group"><label>Имя</label><input id="pf-fullname" placeholder="Иван Иванов"></div>
+                            <div class="form-group"><label>Email</label><input id="pf-email" type="email" placeholder="ivan@mail.ru"></div>
+                            <div class="form-group"><label>Телефон</label><input id="pf-phone" placeholder="+7 999 123-45-67"></div>
+                            <div class="form-group"><label>Адрес доставки</label><input id="pf-address" placeholder="г. Москва, ул. Примерная, 1"></div>
+                            <div class="form-actions">
+                                <button class="btn-sm primary" onclick="saveProfile()">Сохранить</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-form-card">
+                        <h3>Смена пароля</h3>
+                        <div class="admin-form" id="password-form">
+                            <div class="form-group"><label>Текущий пароль</label><input id="pw-old" type="password"></div>
+                            <div class="form-group"><label>Новый пароль</label><input id="pw-new" type="password"></div>
+                            <div class="form-actions">
+                                <button class="btn-sm warning" onclick="changePassword()">Изменить пароль</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h3 style="margin-top:2rem;">История заказов</h3>
+                <div id="profile-orders"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><i class="fas fa-shopping-bag"></i> MyShop</div>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="showSection('home')">Главная</a></li>
+                    <li><a href="#" onclick="showSection('catalog')">Каталог</a></li>
+                    <li><a href="#" onclick="showSection('cart')">Корзина</a></li>
+                    <li><a href="#" onclick="showAuthModal()">Вход</a></li>
+                </ul>
+                <div class="footer-social">
+                    <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="copyright">&copy; 2024 MyShop. Все права защищены.</div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="auth-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Авторизация</h3>
+                <button class="close-modal" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="auth-tabs">
+                <button class="tab active" onclick="switchTab('login')">Вход</button>
+                <button class="tab" onclick="switchTab('register')">Регистрация</button>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email/Логин</label>
+                    <input type="text" id="login-email" placeholder="example@mail.com" required>
+                    <div class="error-message" id="login-email-error">Введите корректный email</div>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Пароль</label>
+                    <input type="password" id="login-password" placeholder="Введите пароль" required>
+                    <div class="error-message" id="login-password-error">Пароль не может быть пустым</div>
+                </div>
+                <button type="submit" class="submit-btn" onclick="login(event)">Войти</button>
+            </form>
+            <form id="register-form" style="display: none;">
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="example@mail.com" required>
+                    <div class="error-message" id="register-email-error">Введите корректный email</div>
+                </div>
+                <div class="form-group">
+                    <label for="register-login">Логин</label>
+                    <input type="text" id="register-login" placeholder="Введите логин" required>
+                    <div class="error-message" id="register-login-error">Логин не может быть пустым</div>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Пароль</label>
+                    <input type="password" id="register-password" placeholder="Минимум 6 символов" required>
+                    <div class="error-message" id="register-password-error">Минимум 6 символов</div>
+                </div>
+                <button type="submit" class="submit-btn" onclick="register(event)">Зарегистрироваться</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
