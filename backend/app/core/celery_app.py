@@ -19,6 +19,12 @@ celery_app.conf.update(
     task_soft_time_limit=240,
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=100,
+    beat_schedule={
+        "reset-demo-daily": {
+            "task": "app.tasks.demo.reset_demo",
+            "schedule": 86400.0,  # 24 часа
+        },
+    },
 )
 
 celery_app.autodiscover_tasks(["app.tasks"])

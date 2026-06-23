@@ -20,10 +20,11 @@ from app.core.rate_limit import limiter
 from app.core.security import hash_password
 from app.database.connection import async_session_factory, engine
 from app.exceptions import register_exception_handlers
+from app.middleware.license import LicenseMiddleware
 from app.models.product import Product
 from app.models.promo import PromoCode
 from app.models.user import User
-from app.routers import admin, auth, cart, orders, products, profile, promos, reviews, upload, wishlist
+from app.routers import admin, auth, cart, licenses, orders, products, profile, promos, reviews, superadmin, upload, wishlist
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BACKEND_DIR.parent / "frontend"
@@ -157,6 +158,7 @@ Authorization: Bearer <access_token>
 
     app.add_middleware(ExceptionLoggingMiddleware)
     app.add_middleware(AccessLogMiddleware)
+    app.add_middleware(LicenseMiddleware)
 
     register_exception_handlers(app)
 
@@ -212,6 +214,8 @@ Authorization: Bearer <access_token>
 
     app.include_router(auth.router)
     app.include_router(admin.router, prefix="/api")
+    app.include_router(licenses.router, prefix="/api")
+    app.include_router(superadmin.router, prefix="/api")
     app.include_router(products.router, prefix="/api")
     app.include_router(cart.router, prefix="/api")
     app.include_router(orders.router, prefix="/api")

@@ -19,9 +19,11 @@ class User(Base):
     full_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
     address: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    tenant_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("tenants.id"), nullable=True)
 
     cart_items: Mapped[list["Cart"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    tenant: Mapped["Tenant | None"] = relationship(back_populates="users")
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username='{self.username}')>"
