@@ -1,10 +1,11 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.rate_limit import limiter
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -32,7 +33,9 @@ class RefreshRequest(BaseModel):
 
 
 @router.post("/register", response_model=dict)
+@limiter.limit("3/minute")
 async def register(
+    request: Request,
     username: str,
     password: str,
     session: AsyncSession = Depends(get_async_session),
@@ -53,7 +56,9 @@ async def register(
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     username: str,
     password: str,
     session: AsyncSession = Depends(get_async_session),

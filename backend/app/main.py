@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.middleware import AccessLogMiddleware, ExceptionLoggingMiddleware
 from app.core.rabbitmq import close as rabbitmq_close
+from app.core.rate_limit import limiter
 from app.core.security import hash_password
 from app.database.connection import async_session_factory, engine
 from app.exceptions import register_exception_handlers
@@ -159,24 +160,55 @@ Authorization: Bearer <access_token>
 
     register_exception_handlers(app)
 
+    app.state.limiter = limiter
+
     @app.get("/health")
     async def health_check():
         """Health check: DB + Redis + RabbitMQ."""
-        status = {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+        import time
+        start = time.perf_counter()
+        status = {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat(), "version": settings.APP_VERSION}
+
+        # DB check
         try:
+            db_start = time.perf_counter()
             async with async_session_factory() as session:
                 await session.execute(text("SELECT 1"))
-            status["database"] = "ok"
-        except Exception:
-            status["database"] = "error"
+            status["database"] = {"status": "ok", "latency_ms": round((time.perf_counter() - db_start) * 1000, 1)}
+        except Exception as e:
+            status["database"] = {"status": "error", "error": str(e)[:100]}
             status["status"] = "degraded"
+
+        # Redis check
         from app.core.cache import cache_get
         try:
+            cache_start = time.perf_counter()
             await cache_get("health")
-            status["redis"] = "ok"
+            status["redis"] = {"status": "ok", "latency_ms": round((time.perf_counter() - cache_start) * 1000, 1)}
         except Exception:
-            status["redis"] = "unavailable"
+            status["redis"] = {"status": "unavailable"}
+
+        status["latency_ms"] = round((time.perf_counter() - start) * 1000, 1)
         return status
+
+    @app.get("/metrics")
+    async def metrics():
+        """Базовые метрики для мониторинга."""
+        from sqlalchemy import func
+        from app.models.order import Order
+        from app.models.product import Product
+        from app.models.user import User
+
+        async with async_session_factory() as session:
+            users = (await session.execute(select(func.count(User.id)))).scalar() or 0
+            products = (await session.execute(select(func.count(Product.id)))).scalar() or 0
+            orders = (await session.execute(select(func.count(Order.id)))).scalar() or 0
+
+        return {
+            "users_total": users,
+            "products_total": products,
+            "orders_total": orders,
+        }
 
     app.include_router(auth.router)
     app.include_router(admin.router, prefix="/api")
