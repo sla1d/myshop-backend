@@ -23,7 +23,7 @@ if _cfg.SENTRY_DSN:
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+
 from sqlalchemy import select, text
 
 from datetime import datetime, timedelta, timezone
@@ -46,11 +46,10 @@ from app.models.promo import PromoCode
 from app.models.user import User
 from app.models.order import Order, OrderItem
 from app.models.order_status_history import OrderStatusHistory
-from app.routers import ab_test, admin, ai_chat, analytics, auth, audit, banners, billing, cart, csv, flash_sales, generate_store, i18n, integrations, licenses, loyalty, marketplace, orders, plugins, products, profile, promos, public, referral, reviews, saas, store, superadmin, tracking, tfa, upload, whitelabel, wishlist, ws
+from app.routers import ab_test, admin, ai_chat, analytics, auth, audit, banners, billing, cart, csv, flash_sales, i18n, integrations, licenses, loyalty, marketplace, orders, plugins, products, profile, promos, public, referral, reviews, saas, store, tracking, tfa, upload, whitelabel, wishlist, ws
 from app.rbac.seed import seed_rbac, assign_owner_role
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-FRONTEND_DIR = BACKEND_DIR.parent / "frontend"
 
 
 async def _seed_data():
@@ -312,7 +311,6 @@ Authorization: Bearer <access_token>
     app.include_router(analytics.router, prefix="/api")
     app.include_router(licenses.router, prefix="/api")
     app.include_router(marketplace.router, prefix="/api")
-    app.include_router(superadmin.router, prefix="/api")
     app.include_router(products.router, prefix="/api")
     app.include_router(cart.router, prefix="/api")
     app.include_router(orders.router, prefix="/api")
@@ -333,7 +331,6 @@ Authorization: Bearer <access_token>
     app.include_router(banners.router, prefix="/api")
     app.include_router(billing.router, prefix="/api")
     app.include_router(saas.router, prefix="/api")
-    app.include_router(generate_store.router, prefix="/api")
     app.include_router(integrations.router, prefix="/api")
     app.include_router(ai_chat.router, prefix="/api")
     app.include_router(plugins.router, prefix="/api")
@@ -342,13 +339,10 @@ Authorization: Bearer <access_token>
     app.include_router(whitelabel.router, prefix="/api")
     app.include_router(public.router)
 
-    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
-
     @app.get("/", response_class=HTMLResponse)
     async def index():
-        """Отдаём главную страницу."""
-        html_path = FRONTEND_DIR / "index.html"
-        return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+        """API root."""
+        return HTMLResponse(content="<h1>MyShop API</h1><p>Docs: <a href='/docs'>/docs</a></p>")
 
     return app
 

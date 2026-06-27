@@ -64,6 +64,9 @@ node_modules/
 .expo/
 *.hprof
 
+# === React frontend (not ready) ===
+frontend-react/
+
 # === Build artifacts ===
 *.pyc
 *.pyo
