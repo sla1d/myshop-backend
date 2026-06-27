@@ -7,7 +7,8 @@ from secrets import token_hex
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_admin
+from app.api.deps import get_current_user
+from app.rbac.deps import RequirePermission
 from app.database.connection import get_async_session
 from app.models.license import License, Tenant, LICENSE_PLANS
 from app.models.user import User
@@ -40,7 +41,8 @@ class LicenseExtend(BaseModel):
 
 @router.get("", response_model=list[LicenseResponse])
 async def list_licenses(
-    admin: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_user),
+    _perm: None = Depends(RequirePermission("tenant.manage")),
     session: AsyncSession = Depends(get_async_session),
 ):
     """Все лицензии."""
@@ -66,7 +68,8 @@ async def list_licenses(
 @router.post("", response_model=LicenseResponse, status_code=201)
 async def create_license(
     body: TenantCreate,
-    admin: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_user),
+    _perm: None = Depends(RequirePermission("tenant.manage")),
     session: AsyncSession = Depends(get_async_session),
 ):
     """Создать клиента с лицензией."""
@@ -115,7 +118,8 @@ async def create_license(
 async def extend_license(
     license_id: int,
     body: LicenseExtend,
-    admin: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_user),
+    _perm: None = Depends(RequirePermission("tenant.manage")),
     session: AsyncSession = Depends(get_async_session),
 ):
     """Продлить лицензию."""
@@ -149,7 +153,8 @@ async def extend_license(
 @router.patch("/{license_id}/toggle")
 async def toggle_license(
     license_id: int,
-    admin: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_user),
+    _perm: None = Depends(RequirePermission("tenant.manage")),
     session: AsyncSession = Depends(get_async_session),
 ):
     """Включить/выключить лицензию."""

@@ -24,6 +24,10 @@ celery_app.conf.update(
             "task": "app.tasks.demo.reset_demo",
             "schedule": 86400.0,  # 24 часа
         },
+        "cleanup-expired-roles": {
+            "task": "app.tasks.cleanup_expired_roles",
+            "schedule": 3600.0,  # каждый час
+        },
     },
 )
 

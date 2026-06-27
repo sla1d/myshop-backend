@@ -45,11 +45,13 @@ async def test_login_nonexistent(client):
 
 @pytest.mark.asyncio
 async def test_refresh(client, seed_user):
-    from app.core.security import create_refresh_token
-    token = create_refresh_token({"sub": str(seed_user.id)})
-    r = await client.post("/refresh", json={"refresh_token": token})
+    login_r = await client.post("/login", params={"username": "testuser", "password": "test123"})
+    assert login_r.status_code == 200
+    refresh_token = login_r.json()["refresh_token"]
+    r = await client.post("/refresh", json={"refresh_token": refresh_token})
     assert r.status_code == 200
     assert "access_token" in r.json()
+    assert "refresh_token" in r.json()
 
 
 @pytest.mark.asyncio

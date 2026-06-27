@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.database.base import Base
@@ -13,7 +14,10 @@ from app.models.product import Product
 from app.models.promo import PromoCode
 from app.models.user import User
 from app.core.security import hash_password, create_access_token
+from app.rbac.models import Role, Permission, RolePermission, UserRole
+from app.rbac.seed import seed_rbac, assign_owner_role
 
+# Тесты работают на SQLite in-memory для скорости
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
 engine = create_async_engine(TEST_DB_URL, echo=False)
@@ -83,6 +87,7 @@ async def seed_products(session):
 
 @pytest_asyncio.fixture
 async def seed_admin(session):
+    await seed_rbac(session)
     admin = User(
         username="admin",
         password=hash_password("admin123"),
@@ -92,6 +97,8 @@ async def seed_admin(session):
     session.add(admin)
     await session.commit()
     await session.refresh(admin)
+    await assign_owner_role(session, admin.id, tenant_id=1)
+    await session.commit()
     return admin
 
 

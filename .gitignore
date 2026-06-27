@@ -1,15 +1,69 @@
+# === Python ===
 __pycache__/
-*.pyc
-*.pyo
-.env
-.secret_key
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# === Virtual environments ===
 .venv/
 venv/
-uploads/
-logs/
+ENV/
+
+# === Environment & Secrets ===
+.env
+.env.*
+!.env.example
+.secret_key
+
+# === Database ===
 *.db
 *.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# === IDE ===
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# === OS ===
 .DS_Store
-backend/main_legacy.py
-backend/test_api.py
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# === Logs ===
+logs/
+*.log
+
+# === Uploads (user content) ===
+uploads/
+
+# === Tests ===
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Node (mobile/landing) ===
+node_modules/
+.cache/
+.expo/
+*.hprof
+
+# === Build artifacts ===
+*.pyc
+*.pyo

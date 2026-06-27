@@ -1,0 +1,26 @@
+/* Theme: Light — Clean white theme for shops */
+[data-theme="light"] {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-rgb: 37, 99, 235;
+    --secondary-color: #7c3aed;
+    --secondary-rgb: 124, 58, 237;
+    --dark-bg: #f1f5f9;
+    --darker-bg: #ffffff;
+    --card-bg: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --success-color: #059669;
+    --success-hover: #047857;
+    --success-rgb: 5, 150, 105;
+    --danger-color: #dc2626;
+    --danger-hover: #b91c1c;
+    --danger-rgb: 220, 38, 38;
+    --warning-color: #d97706;
+    --warning-rgb: 217, 119, 6;
+    --header-bg: rgba(255, 255, 255, 0.95);
+    --btn-text: #ffffff;
+    --btn-warning-text: #000000;
+    --overlay-bg: rgba(0, 0, 0, 0.4);
+}

@@ -4,10 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_admin
 from app.database.connection import get_async_session
 from app.models.promo import PromoCode
-from app.models.user import User
 from app.schemas.promo import PromoApply, PromoResponse
 
 router = APIRouter(prefix="/promos", tags=["Промокоды"])
@@ -18,7 +16,6 @@ async def validate_promo(
     body: PromoApply,
     session: AsyncSession = Depends(get_async_session),
 ):
-    """Проверить и применить промокод."""
     result = await session.execute(
         select(PromoCode).where(PromoCode.code == body.code.upper())
     )
@@ -37,8 +34,14 @@ async def validate_promo(
     promo.used_count += 1
     await session.commit()
 
+    if promo.discount_amount > 0:
+        msg = f"Скидка {promo.discount_amount} ₽ применена!"
+    else:
+        msg = f"Скидка {promo.discount_percent}% применена!"
+
     return PromoResponse(
         code=promo.code,
         discount_percent=promo.discount_percent,
-        message=f"Скидка {promo.discount_percent}% применена!",
+        discount_amount=promo.discount_amount,
+        message=msg,
     )

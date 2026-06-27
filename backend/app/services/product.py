@@ -39,11 +39,15 @@ class ProductService:
         max_price: int | None = None,
         min_rating: float | None = None,
         sort: str | None = None,
+        color: str | None = None,
+        size: str | None = None,
+        in_stock: bool | None = None,
     ) -> list[Product]:
         cache_key = self._build_cache_key(
             search=search, category=category, brand=brand,
             min_price=min_price, max_price=max_price,
             min_rating=min_rating, sort=sort,
+            color=color, size=size, in_stock=in_stock,
         )
         cached = await cache_get(cache_key)
         if cached is not None:
@@ -51,7 +55,17 @@ class ProductService:
 
         stmt = select(Product)
         if search:
-            stmt = stmt.where(Product.name.ilike(f"%{search}%"))
+            from sqlalchemy import or_
+            q = f"%{search}%"
+            # Умный поиск: exact match, then contains, then LIKE
+            stmt = stmt.where(
+                or_(
+                    Product.name.ilike(q),
+                    Product.brand.ilike(q),
+                    Product.category.ilike(q),
+                    Product.name.ilike(f"%{'%'.join(search)}%"),
+                )
+            )
         if category:
             stmt = stmt.where(Product.category == category)
         if brand:
@@ -62,6 +76,12 @@ class ProductService:
             stmt = stmt.where(Product.price <= max_price)
         if min_rating is not None:
             stmt = stmt.where(Product.rating >= min_rating)
+        if color:
+            stmt = stmt.where(Product.color == color)
+        if size:
+            stmt = stmt.where(Product.size == size)
+        if in_stock:
+            stmt = stmt.where(Product.in_stock == True)
         if sort and sort in SORT_MAP:
             stmt = stmt.order_by(SORT_MAP[sort])
         result = await self.session.execute(stmt)
@@ -69,7 +89,9 @@ class ProductService:
 
         await cache_set(cache_key, [
             {"id": p.id, "name": p.name, "price": p.price, "image": p.image,
-             "category": p.category, "brand": p.brand, "rating": p.rating}
+             "category": p.category, "brand": p.brand, "rating": p.rating,
+             "color": p.color, "size": p.size, "in_stock": p.in_stock,
+             "stock_quantity": p.stock_quantity}
             for p in products
         ])
         return products
@@ -106,11 +128,28 @@ class ProductService:
                 "id": product.id, "name": product.name, "price": product.price,
                 "image": product.image, "category": product.category,
                 "brand": product.brand, "rating": product.rating,
+                "color": product.color, "size": product.size,
+                "in_stock": product.in_stock, "stock_quantity": product.stock_quantity,
             })
         return product
 
     async def get_by_category(self, category: str) -> list[Product]:
         return await self.get_all(category=category)
+
+    async def get_recommendations(self, category: str | None = None, limit: int = 6) -> list[Product]:
+        if category:
+            products = await self.get_all(category=category, sort="rating")
+            return products[:limit]
+        products = await self.get_all(sort="rating")
+        return products[:limit]
+
+    async def get_colors(self) -> list[str]:
+        result = await self.session.execute(select(Product.color).distinct())
+        return sorted([r[0] for r in result.all() if r[0]])
+
+    async def get_sizes(self) -> list[str]:
+        result = await self.session.execute(select(Product.size).distinct())
+        return sorted([r[0] for r in result.all() if r[0]])
 
     async def invalidate(self) -> None:
         """Очистить весь кэш товаров."""

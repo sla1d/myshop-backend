@@ -1,0 +1,26 @@
+/* Theme: Rose — Warm pink tones for fashion/beauty */
+[data-theme="rose"] {
+    --primary-color: #ec4899;
+    --primary-hover: #db2777;
+    --primary-rgb: 236, 72, 153;
+    --secondary-color: #f472b6;
+    --secondary-rgb: 244, 114, 182;
+    --dark-bg: #1a0a12;
+    --darker-bg: #0d0509;
+    --card-bg: #2a1120;
+    --text-primary: #fdf2f8;
+    --text-secondary: #f9a8d4;
+    --border-color: #3d1a2e;
+    --success-color: #10b981;
+    --success-hover: #059669;
+    --success-rgb: 16, 185, 129;
+    --danger-color: #ef4444;
+    --danger-hover: #dc2626;
+    --danger-rgb: 239, 68, 68;
+    --warning-color: #f59e0b;
+    --warning-rgb: 245, 158, 11;
+    --header-bg: rgba(13, 5, 9, 0.95);
+    --btn-text: #ffffff;
+    --btn-warning-text: #000000;
+    --overlay-bg: rgba(0, 0, 0, 0.7);
+}

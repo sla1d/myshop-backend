@@ -1,0 +1,21 @@
+# Проверить PostgreSQL
+pg_isready -h /tmp -p 5434
+
+# Проверить сайт
+curl -s http://localhost:8000/api/products | python3 -c "import sys,json;print('Сайт OK:', len(json.load(sys.stdin)), 'товаров')"
+
+# Проверить сервер (логи)
+tail -5 /tmp/myshop.log
+
+# Всё вместе одной командой
+pg_isready -h /tmp -p 5434 && curl -s http://localhost:8000/api/products > /dev/null && echo "Всё работает" || echo "Что-то упало"
+
+Вот команды для проверки:
+# Всё сразу
+pg_isready -h /tmp -p 5434 && curl -s http://localhost:8000/api/products > /dev/null && echo "Всё работает" || echo "Что-то упало"
+
+# Если упало — запустить PostgreSQL
+/opt/homebrew/opt/postgresql@18/bin/pg_ctl -D /opt/homebrew/var/postgresql@18 -o "-p 5434 -k /tmp" -l /tmp/postgres.log start
+
+# Если упал сайт
+cd ~/Desktop/project/backend && ../.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 &

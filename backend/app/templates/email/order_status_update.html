@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0f172a;font-family:Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;background:#1e293b;border-radius:16px;overflow:hidden;margin-top:20px;margin-bottom:20px;">
+    <div style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:30px;text-align:center;">
+        <h1 style="color:#fff;margin:0;font-size:24px;">📦 Обновление заказа</h1>
+    </div>
+    <div style="padding:30px;color:#e2e8f0;">
+        <h2 style="color:#3b82f6;margin-top:0;">Заказ #{{order_id}}</h2>
+        <p>Здравствуйте, {{username}}!</p>
+        <p>Статус вашего заказа изменён:</p>
+        <div style="background:#0f172a;border-radius:8px;padding:15px;margin:15px 0;text-align:center;">
+            <span style="background:#3b82f6;color:#fff;padding:8px 20px;border-radius:20px;font-weight:bold;">{{status}}</span>
+        </div>
+        {% if tracking_number %}
+        <p><strong>Трек-номер:</strong> <code style="background:#334155;padding:3px 8px;border-radius:4px;">{{tracking_number}}</code></p>
+        {% endif %}
+    </div>
+    <div style="background:#0f172a;padding:20px;text-align:center;color:#64748b;font-size:12px;">
+        <p style="margin:0;">© 2024 MyShop. Все права защищены.</p>
+    </div>
+</div>
+</body>
+</html>

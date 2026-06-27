@@ -1,0 +1,26 @@
+/* Theme: Nature — Green organic tones */
+[data-theme="nature"] {
+    --primary-color: #16a34a;
+    --primary-hover: #15803d;
+    --primary-rgb: 22, 163, 74;
+    --secondary-color: #0d9488;
+    --secondary-rgb: 13, 148, 136;
+    --dark-bg: #0a1f0e;
+    --darker-bg: #040f06;
+    --card-bg: #14261a;
+    --text-primary: #ecfdf5;
+    --text-secondary: #86efac;
+    --border-color: #1a3a24;
+    --success-color: #22c55e;
+    --success-hover: #16a34a;
+    --success-rgb: 34, 197, 94;
+    --danger-color: #ef4444;
+    --danger-hover: #dc2626;
+    --danger-rgb: 239, 68, 68;
+    --warning-color: #eab308;
+    --warning-rgb: 234, 179, 8;
+    --header-bg: rgba(4, 15, 6, 0.95);
+    --btn-text: #ffffff;
+    --btn-warning-text: #000000;
+    --overlay-bg: rgba(0, 0, 0, 0.7);
+}

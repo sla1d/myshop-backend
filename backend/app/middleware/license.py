@@ -32,8 +32,8 @@ class LicenseMiddleware(BaseHTTPMiddleware):
         if DEMO_MODE or any(request.url.path.startswith(p) for p in SKIP_PATHS):
             return await call_next(request)
 
-        # Локальная разработка
-        if host in ("localhost", "127.0.0.1"):
+        # Локальная разработка и тесты
+        if host in ("localhost", "127.0.0.1", "test"):
             return await call_next(request)
 
         # Проверка лицензии

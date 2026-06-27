@@ -1,8 +1,13 @@
+# Backend-specific ignores
 __pycache__/
-*.pyc
+*.py[cod]
 .env
 .venv/
 uploads/
 logs/
 *.db
 *.sqlite
+*.db-wal
+*.db-shm
+.pytest_cache/
+.coverage

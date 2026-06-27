@@ -1,6 +1,7 @@
+"""Orders API — create + RBAC protected admin."""
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +10,7 @@ from app.core.rabbitmq import publish
 from app.core.websocket import manager
 from app.database.connection import get_async_session
 from app.models.user import User
+from app.rbac.deps import RequirePermission
 from app.schemas.order import OrderResponse
 from app.services.order import OrderService
 
@@ -27,7 +29,7 @@ async def create_order(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ):
-    """Создать заказ из корзины с опциональным промокодом."""
+    """Создать заказ из корзины с опциональным промокодом + кэшбэк + email."""
     order_service = OrderService(session)
     try:
         result = await order_service.create(user.id, body.address, body.promo_code)
@@ -43,16 +45,20 @@ async def create_order(
         "address": body.address,
     })
 
-    # Фоновая задача (Celery)
+    # Email подтверждение
     try:
-        from app.tasks import send_order_notification
-        send_order_notification.delay(
+        from app.services.email import send_order_confirmation_email
+        send_order_confirmation_email(
             order_id=result["order_id"],
-            user_email=user.email or user.username,
+            username=user.username,
+            email=user.email or user.username,
             total=result["total"],
+            address=body.address,
+            discount=result.get("discount", 0),
+            cashback=result.get("cashback_earned", 0),
         )
     except Exception:
-        logger.warning("Не удалось запустить задачу уведомления")
+        logger.warning("Не удалось отправить email для заказа #%s", result["order_id"])
 
     logger.info("Заказ #%s создан: user=%d, total=%s ₽", result["order_id"], user.id, result["total"])
 
@@ -62,6 +68,8 @@ async def create_order(
         "order_id": result["order_id"],
         "total": result["total"],
         "address": body.address,
+        "cashback_earned": result.get("cashback_earned", 0),
     })
 
-    return OrderResponse(status="ok", order_id=result["order_id"], total=result["total"])
+    resp = OrderResponse(status="ok", order_id=result["order_id"], total=result["total"])
+    return resp

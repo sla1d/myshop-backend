@@ -10,6 +10,10 @@ class Product(BaseModel):
     category: str = Field(..., examples=["electronics"])
     brand: str = Field(..., examples=["TechCo"])
     rating: float = Field(..., examples=[4.5], description="Рейтинг 0-5")
+    color: str | None = Field(None, examples=["black"])
+    size: str | None = Field(None, examples=["M"])
+    in_stock: bool = True
+    stock_quantity: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -22,6 +26,10 @@ class ProductCreate(BaseModel):
     category: str = Field(..., examples=["electronics"])
     brand: str = Field(default="", examples=["BrandName"])
     rating: float = Field(default=0.0, ge=0, le=5, examples=[4.0])
+    color: str | None = None
+    size: str | None = None
+    in_stock: bool = True
+    stock_quantity: int = 0
 
 
 class ProductUpdate(BaseModel):
@@ -32,3 +40,7 @@ class ProductUpdate(BaseModel):
     category: str | None = None
     brand: str | None = None
     rating: float | None = Field(None, ge=0, le=5)
+    color: str | None = None
+    size: str | None = None
+    in_stock: bool | None = None
+    stock_quantity: int | None = None

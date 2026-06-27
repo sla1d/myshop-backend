@@ -2,14 +2,11 @@ from pydantic import BaseModel
 
 
 class PromoApply(BaseModel):
-    """Схема применения промокода."""
-
     code: str
 
 
 class PromoResponse(BaseModel):
-    """Ответ после применения промокода."""
-
     code: str
-    discount_percent: int
+    discount_percent: int = 0
+    discount_amount: int = 0
     message: str

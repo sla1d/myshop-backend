@@ -1,4 +1,6 @@
-from fastapi import Depends, HTTPException, status
+from typing import Optional
+
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,3 +51,22 @@ async def get_current_admin(
             detail="Недостаточно прав",
         )
     return current_user
+
+
+async def get_tenant_id_from_request(
+    request: Request,
+) -> Optional[int]:
+    """Extract tenant_id from request.state (set by TenantMiddleware)."""
+    return getattr(request.state, "tenant_id", None)
+
+
+async def get_tenant_id_or_raise(
+    tenant_id: Optional[int] = Depends(get_tenant_id_from_request),
+) -> int:
+    """Require tenant_id. Raises 400 if missing."""
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant context required. Set X-Tenant-ID header.",
+        )
+    return tenant_id

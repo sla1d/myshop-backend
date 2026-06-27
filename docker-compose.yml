@@ -39,6 +39,18 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
   backend:
     build:
       context: ./backend
@@ -49,6 +61,10 @@ services:
       DATABASE_URL: postgresql+asyncpg://myshop:myshop_secret@db:5432/myshop
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_BUCKET: myshop-uploads
       HOST: 0.0.0.0
       PORT: 8000
     depends_on:
@@ -59,7 +75,6 @@ services:
       rabbitmq:
         condition: service_healthy
     volumes:
-      - uploads_data:/app/uploads
       - logs_data:/app/logs
 
   celery-worker:
@@ -90,5 +105,5 @@ services:
 
 volumes:
   pgdata:
-  uploads_data:
+  minio_data:
   logs_data:
