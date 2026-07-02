@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyShop - Интернет-магазин</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="/static/css/themes/midnight.css" id="theme-css">
+    <link rel="stylesheet" href="/static/css/style.css?v=11">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo" onclick="showSection('home')">
+                    <i class="fas fa-shopping-bag"></i> <span id="store-logo-text">MyShop</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#" onclick="showSection('home')" class="nav-link" data-i18n="home">Главная</a></li>
+                    <li><a href="#" onclick="showSection('catalog')" class="nav-link" data-i18n="catalog">Каталог</a></li>
+                    <li><a href="#" onclick="showSection('cart')" class="nav-link" data-i18n="cart">Корзина</a></li>
+                    <li id="wishlist-link" style="display: none;"><a href="#" onclick="showSection('wishlist')" class="nav-link" data-i18n="wishlist">Избранное</a></li>
+                    <li id="compare-link" style="display: none;"><a href="#" onclick="showSection('compare')" class="nav-link" data-i18n="compare">Сравнить</a></li>
+                    <li id="admin-link" style="display: none;"><a href="#" onclick="showSection('admin')" class="nav-link" data-i18n="admin">Админ</a></li>
+                    <li id="profile-link" style="display: none;"><a href="#" onclick="showSection('profile')" class="nav-link" data-i18n="profile">Профиль</a></li>
+                    <li id="auth-link"><a href="#" onclick="showAuthModal()" data-i18n="login">Вход</a></li>
+                </ul>
+                <div class="user-info" id="user-info" style="display: none;">
+                    <span id="header-avatar"></span>
+                    <span class="username" id="header-username"></span>
+                    <button class="logout-btn" onclick="logout()" data-i18n="logout">Выйти</button>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="toggleLang()" title="Language">
+                        <span id="lang-label">EN</span>
+                    </button>
+                    <div class="theme-switcher" id="theme-switcher">
+                        <button class="theme-toggle" onclick="toggleThemeMenu()" title="Сменить тему">
+                            <i class="fas fa-palette"></i>
+                        </button>
+                        <div class="theme-menu" id="theme-menu">
+                            <div class="theme-option" data-theme="midnight" onclick="setTheme('midnight')"><span class="theme-dot" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6)"></span> Midnight</div>
+                            <div class="theme-option" data-theme="light" onclick="setTheme('light')"><span class="theme-dot" style="background:linear-gradient(135deg,#2563eb,#f1f5f9)"></span> Light</div>
+                            <div class="theme-option" data-theme="nature" onclick="setTheme('nature')"><span class="theme-dot" style="background:linear-gradient(135deg,#16a34a,#0d9488)"></span> Nature</div>
+                            <div class="theme-option" data-theme="rose" onclick="setTheme('rose')"><span class="theme-dot" style="background:linear-gradient(135deg,#ec4899,#f472b6)"></span> Rose</div>
+                            <div class="theme-option" data-theme="cyber" onclick="setTheme('cyber')"><span class="theme-dot" style="background:linear-gradient(135deg,#00ff88,#00e5ff)"></span> Cyber</div>
+                            <div class="theme-option" data-theme="minimal" onclick="setTheme('minimal')"><span class="theme-dot" style="background:linear-gradient(135deg,#171717,#fafafa)"></span> Minimal</div>
+                        </div>
+                    </div>
+                    <a href="#" class="cart-icon" onclick="showSection('cart')">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count" id="cart-count">0</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="home">
+            <div class="hero">
+                <div class="container">
+                    <div class="hero-content">
+                        <h1 data-i18n="hero_title">Добро пожаловать в MyShop</h1>
+                        <p data-i18n="hero_desc">Откройте для себя тысячи товаров по лучшим ценам</p>
+                        <a href="#" class="cta-button" onclick="showSection('catalog')">
+                            <span data-i18n="hero_cta">Перейти в каталог</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div id="flash-sale-banner" style="display:none;margin-bottom:2rem;"></div>
+                <div id="ad-banners" style="display:none;"></div>
+                <h2 class="section-title" data-i18n="recommendations">Рекомендуем</h2>
+                <div class="products-grid" id="home-recommendations"></div>
+            </div>
+        </section>
+
+        <section id="catalog">
+            <div class="container">
+                <h2 class="section-title" data-i18n="products_title">Каталог товаров</h2>
+                <div class="search-bar">
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" data-i18n-placeholder="search" placeholder="Поиск товаров..." oninput="debounceSearch()">
+                        <div class="search-dropdown" id="search-dropdown"></div>
+                    </div>
+                    <select id="category-filter" onchange="loadFilteredProducts()">
+                        <option value="" data-i18n="all_categories">Все категории</option>
+                    </select>
+                    <select id="brand-filter" onchange="loadFilteredProducts()">
+                        <option value="" data-i18n="all_brands">Все бренды</option>
+                    </select>
+                    <select id="rating-filter" onchange="loadFilteredProducts()">
+                        <option value="" data-i18n="any_rating">Любой рейтинг</option>
+                        <option value="4.5">4.5+</option>
+                        <option value="4.0">4.0+</option>
+                        <option value="3.5">3.5+</option>
+                    </select>
+                    <select id="sort-filter" onchange="loadFilteredProducts()">
+                        <option value="" data-i18n="sort">Сортировка</option>
+                        <option value="newest" data-i18n="sort_newest">Новинки</option>
+                        <option value="price_asc" data-i18n="sort_price_asc">Цена ↑</option>
+                        <option value="price_desc" data-i18n="sort_price_desc">Цена ↓</option>
+                        <option value="rating" data-i18n="sort_rating">Рейтинг</option>
+                        <option value="name" data-i18n="sort_name">По названию</option>
+                    </select>
+                </div>
+                <div class="price-range-bar">
+                    <label data-i18n="min_max_price">Цена:</label>
+                    <input type="number" id="min-price" placeholder="От" min="0" oninput="debounceSearch()">
+                    <span>—</span>
+                    <input type="number" id="max-price" placeholder="До" min="0" oninput="debounceSearch()">
+                    <select id="color-filter" onchange="loadFilteredProducts()">
+                        <option value="" data-i18n="filter_color">Все цвета</option>
+                    </select>
+                    <select id="size-filter" onchange="loadFilteredProducts()">
+                        <option value="" data-i18n="filter_size">Все размеры</option>
+                    </select>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap;">
+                        <input type="checkbox" id="stock-filter" onchange="loadFilteredProducts()" style="width:16px;height:16px;accent-color:var(--primary-color);">
+                        <span data-i18n="in_stock">В наличии</span>
+                    </label>
+                </div>
+                <div class="products-grid" id="products-grid"></div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="product-detail">
+            <div class="container">
+                <a href="#" onclick="showSection('catalog')" style="color:var(--primary-color);"><i class="fas fa-arrow-left"></i> <span data-i18n="back">Назад в каталог</span></a>
+                <div class="product-detail-layout" id="product-detail-content"></div>
+                <div style="margin-top:1.5rem;display:flex;gap:0.5rem;">
+                    <button class="btn-sm primary" id="compare-btn" onclick="toggleCompare()" style="display:none;"><i class="fas fa-balance-scale"></i> <span data-i18n="compare">Сравнить</span></button>
+                    <button class="btn-sm" id="deferred-btn" onclick="addToDeferred()" style="display:none;background:var(--secondary-color);color:#fff;"><i class="fas fa-clock"></i> <span data-i18n="buy_later">Купить позже</span></button>
+                </div>
+                <h3 style="margin-top:2rem;" data-i18n="reviews">Отзывы</h3>
+                <div id="product-reviews"></div>
+            </div>
+        </section>
+
+        <section id="wishlist">
+            <div class="container">
+                <h2 class="section-title" data-i18n="wishlist_title">Избранное</h2>
+                <div class="products-grid" id="wishlist-grid"></div>
+            </div>
+        </section>
+
+        <section id="compare">
+            <div class="container">
+                <h2 class="section-title" data-i18n="compare_title">Сравнение товаров</h2>
+                <div id="compare-content"></div>
+            </div>
+        </section>
+
+        <section id="deferred">
+            <div class="container">
+                <h2 class="section-title" data-i18n="deferred_title">Отложенные товары</h2>
+                <div class="products-grid" id="deferred-grid"></div>
+            </div>
+        </section>
+
+        <section id="brand-page">
+            <div class="container">
+                <h2 class="section-title" id="brand-page-title"></h2>
+                <div class="products-grid" id="brand-grid"></div>
+            </div>
+        </section>
+
+        <section id="cart">
+            <div class="container">
+                <h2 class="section-title" data-i18n="cart_title">Корзина</h2>
+
+                <!-- Адрес доставки -->
+                <div class="cart-address-card" id="cart-address-card">
+                    <div id="cart-address-view">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                            <i class="fas fa-map-marker-alt" style="color:var(--primary-color);font-size:1.2rem;"></i>
+                            <strong style="font-size:1rem;">Адрес доставки</strong>
+                        </div>
+                        <p id="cart-address-text" style="color:var(--text-secondary);margin:0;">Укажите адрес получения</p>
+                    </div>
+                    <button class="btn-sm primary" onclick="openAddressModal()" id="cart-address-btn">
+                        <i class="fas fa-plus"></i> Указать адрес
+                    </button>
+                </div>
+
+                <!-- Модалка адреса -->
+                <div class="cart-address-card" id="cart-address-form" style="display:none;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <i class="fas fa-map-marker-alt" style="color:var(--primary-color);font-size:1.2rem;"></i>
+                        <strong style="font-size:1rem;">Адрес доставки</strong>
+                    </div>
+                    <div class="delivery-toggle">
+                        <button class="delivery-option active" data-type="courier" onclick="selectDeliveryType('courier')">
+                            <i class="fas fa-truck"></i> Курьером
+                        </button>
+                        <button class="delivery-option" data-type="pickup" onclick="selectDeliveryType('pickup')">
+                            <i class="fas fa-store"></i> Пункт выдачи
+                        </button>
+                    </div>
+                    <div id="delivery-courier-fields" class="delivery-fields">
+                        <div class="form-group"><label>Город</label><input id="addr-city" placeholder="Москва"></div>
+                        <div class="form-group"><label>Улица</label><input id="addr-street" placeholder="ул. Примерная"></div>
+                        <div class="form-group"><label>Дом</label><input id="addr-house" placeholder="12"></div>
+                        <div class="form-group"><label>Квартира</label><input id="addr-flat" placeholder="42"></div>
+                    </div>
+                    <div id="delivery-pickup-fields" class="delivery-fields" style="display:none;">
+                        <div class="form-group" style="grid-column:1/-1;">
+                            <label>Пункт выдачи</label>
+                            <select id="addr-pickup">
+                                <option value="">Выберите пункт выдачи</option>
+                                <option value="pickup_1">Пункт выдачи №1 — ул. Ленина, 10 (Пн-Пт 9:00-20:00)</option>
+                                <option value="pickup_2">Пункт выдачи №2 — пр. Мира, 45 (Пн-Сб 10:00-21:00)</option>
+                                <option value="pickup_3">Пункт выдачи №3 — ул. Пушкина, 78 (Ежедневно 8:00-22:00)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:12px;">
+                        <button class="btn-sm" onclick="closeAddressModal()">Отмена</button>
+                        <button class="btn-sm primary" onclick="saveDeliveryAddress()"><i class="fas fa-check"></i> Сохранить</button>
+                    </div>
+                </div>
+
+                <!-- Товары -->
+                <div class="cart-toolbar" id="cart-toolbar" style="display:none;">
+                    <label class="cart-select-all">
+                        <input type="checkbox" id="cart-select-all" onchange="toggleSelectAll(this.checked)">
+                        <span>Выбрать все</span>
+                    </label>
+                    <button class="btn-sm" style="color:var(--danger-color);" onclick="removeSelected()"><i class="fas fa-trash"></i> Удалить выбранные</button>
+                </div>
+
+                <div class="cart-items" id="cart-items">
+                    <div class="empty-cart"><i class="fas fa-shopping-cart"></i><p data-i18n="empty_cart">Корзина пуста</p></div>
+                </div>
+
+                <!-- Оформление -->
+                <div class="cart-checkout-card" id="cart-total" style="display:none;">
+                    <h3 style="margin-bottom:1rem;"><i class="fas fa-credit-card"></i> Оформление заказа</h3>
+
+                    <div class="checkout-info-row">
+                        <span class="checkout-label"><i class="fas fa-map-marker-alt"></i> Адрес:</span>
+                        <span class="checkout-value" id="checkout-address">Не указан</span>
+                    </div>
+
+                    <div class="checkout-info-row">
+                        <span class="checkout-label"><i class="fas fa-credit-card"></i> Оплата:</span>
+                        <select id="payment-method" class="checkout-select">
+                            <option value="card">Банковская карта</option>
+                            <option value="cash">Наличные при получении</option>
+                            <option value="sbp">СБП (Система быстрых платежей)</option>
+                        </select>
+                    </div>
+
+                    <div class="checkout-info-row">
+                        <span class="checkout-label"><i class="fas fa-tag"></i> Промокод:</span>
+                        <div style="display:flex;gap:0.5rem;flex:1;">
+                            <input type="text" id="promo-input" placeholder="Введите промокод" class="checkout-input">
+                            <button class="btn-sm primary" onclick="applyPromo()">Применить</button>
+                        </div>
+                    </div>
+                    <div id="promo-applied" style="display:none;color:var(--success-color);font-size:0.85rem;margin:-0.5rem 0 0.5rem 0;">
+                        <span id="promo-applied-text"></span>
+                        <a href="#" onclick="removePromo();return false;" style="color:var(--danger-color);margin-left:8px;">Убрать</a>
+                    </div>
+
+                    <div class="checkout-divider"></div>
+
+                    <div class="checkout-total-row">
+                        <span>Товаров: <strong id="total-items">0</strong></span>
+                        <div style="text-align:right;">
+                            <span id="total-old" style="text-decoration:line-through;color:var(--text-secondary);display:none;margin-right:0.5rem;"></span>
+                            <span class="total-amount" id="total-amount">0 ₽</span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                        <button class="clear-cart-btn" onclick="clearCart()"><i class="fas fa-trash"></i> Очистить</button>
+                        <button class="checkout-btn" onclick="checkout()" style="flex:1;"><i class="fas fa-check-circle"></i> К оформлению</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="admin">
+            <div class="container">
+                <h2 class="section-title" data-i18n="admin_title">Админ-панель</h2>
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="adminTab('stats')" data-i18n="stats">Статистика</button>
+                    <button class="admin-tab" onclick="adminTab('products')" data-i18n="products_tab">Товары</button>
+                    <button class="admin-tab" onclick="adminTab('users')" data-i18n="users_tab">Пользователи</button>
+                    <button class="admin-tab" onclick="adminTab('rbac')" data-i18n="rbac_tab">RBAC</button>
+                    <button class="admin-tab" onclick="adminTab('orders')" data-i18n="orders_tab">Заказы</button>
+                    <button class="admin-tab" onclick="adminTab('store')" data-i18n="store_tab">Магазин</button>
+                </div>
+                <div id="admin-content"></div>
+            </div>
+        </section>
+
+        <section id="profile">
+            <div class="container">
+                <h2 class="section-title" data-i18n="profile_title">Мой профиль</h2>
+                <div class="profile-layout">
+                    <div class="profile-form-card" style="grid-column:1/-1;">
+                        <h3 data-i18n="personal_data">Личные данные</h3>
+                        <div style="display:flex;align-items:center;gap:16px;margin-bottom:1rem;">
+                            <div id="profile-avatar-wrap"></div>
+                            <div>
+                                <input type="file" id="avatar-file" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
+                                <button class="btn-sm" onclick="document.getElementById('avatar-file').click()">Загрузить фото</button>
+                                <button class="btn-sm" id="avatar-delete-btn" style="display:none;color:var(--danger-color);" onclick="deleteAvatar()">Удалить</button>
+                            </div>
+                        </div>
+                        <div class="admin-form" id="profile-form">
+                            <div class="form-group"><label>Имя</label><input id="pf-fullname" placeholder="Иван Иванов"></div>
+                            <div class="form-group"><label>Email</label><input id="pf-email" type="email" placeholder="ivan@mail.ru"></div>
+                            <div class="form-group"><label>Телефон</label><input id="pf-phone" placeholder="+7 999 123-45-67"></div>
+                            <div class="form-group"><label>Адрес</label><input id="pf-address" placeholder="Москва, ул. Примерная, 1"></div>
+                            <div class="form-actions"><button class="btn-sm primary" onclick="saveProfile()" data-i18n="save">Сохранить</button></div>
+                        </div>
+                    </div>
+                    <div class="profile-form-card" style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:1rem;padding:1.2rem;">
+                        <button class="btn-sm primary" onclick="document.getElementById('order-history-anchor').scrollIntoView({behavior:'smooth'})" style="padding:0.7rem 2rem;font-size:1rem;">
+                            <i class="fas fa-receipt"></i> История заказов
+                        </button>
+                    </div>
+                    <div class="profile-form-card">
+                        <h3 data-i18n="change_password">Смена пароля</h3>
+                        <div class="admin-form" id="password-form">
+                            <div class="form-group"><label>Текущий пароль</label><input id="pw-old" type="password" placeholder="Введите текущий пароль"></div>
+                            <div class="form-group"><label>Новый пароль</label><input id="pw-new" type="password" placeholder="Минимум 6 символов" oninput="checkPasswordStrength(this.value)"></div>
+                            <div class="form-group"><label>Подтвердите пароль</label><input id="pw-confirm" type="password" placeholder="Повторите новый пароль"></div>
+                            <div class="form-group" style="justify-content:flex-end;">
+                                <div id="pw-strength" style="display:flex;gap:4px;align-items:center;height:24px;">
+                                    <div id="pw-bar-1" style="flex:1;height:4px;border-radius:2px;background:var(--border-color);transition:background 0.3s;"></div>
+                                    <div id="pw-bar-2" style="flex:1;height:4px;border-radius:2px;background:var(--border-color);transition:background 0.3s;"></div>
+                                    <div id="pw-bar-3" style="flex:1;height:4px;border-radius:2px;background:var(--border-color);transition:background 0.3s;"></div>
+                                    <span id="pw-label" style="font-size:0.75rem;color:var(--text-secondary);margin-left:6px;"></span>
+                                </div>
+                            </div>
+                            <div class="form-actions"><button class="btn-sm warning" onclick="changePassword()" data-i18n="change_pw">Изменить пароль</button></div>
+                        </div>
+                    </div>
+                    <div class="profile-form-card">
+                        <h3 data-i18n="loyalty_title">Лояльность</h3>
+                        <div id="loyalty-content"></div>
+                    </div>
+                    <div class="profile-form-card">
+                        <h3 data-i18n="referral_title">Реферальная программа</h3>
+                        <div id="referral-content"></div>
+                    </div>
+                    <div class="profile-form-card">
+                        <h3 data-i18n="tfa_title">Двухфакторная аутентификация</h3>
+                        <div id="tfa-content"></div>
+                    </div>
+                </div>
+                <h3 style="margin-top:2rem;" id="order-history-anchor" data-i18n="order_history">История заказов</h3>
+                <div id="profile-orders"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><i class="fas fa-shopping-bag"></i> MyShop</div>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="showSection('home')" data-i18n="home">Главная</a></li>
+                    <li><a href="#" onclick="showSection('catalog')" data-i18n="catalog">Каталог</a></li>
+                    <li><a href="#" onclick="showSection('cart')" data-i18n="cart">Корзина</a></li>
+                    <li><a href="#" onclick="showAuthModal()" data-i18n="login">Вход</a></li>
+                </ul>
+                <div class="footer-social">
+                    <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="copyright">&copy; 2024 MyShop. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chat-widget" style="display:none;">
+        <button class="chat-toggle" onclick="toggleChat()"><i class="fas fa-headset"></i></button>
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header">
+                <span data-i18n="chat_title">Чат поддержки</span>
+                <button onclick="toggleChat()" style="margin-left:auto;"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--border-color);">
+                <button class="btn-sm" id="chat-mode-support" onclick="setChatMode('support')" style="flex:1;font-size:0.75rem;padding:4px 8px;" data-i18n="chat_title">Поддержка</button>
+                <button class="btn-sm" id="chat-mode-ai" onclick="setChatMode('ai')" style="flex:1;font-size:0.75rem;padding:4px 8px;">ИИ-помощник</button>
+            </div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input-row">
+                <input type="text" id="chat-input" data-i18n-placeholder="chat_placeholder" placeholder="Напишите сообщение..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+                <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="auth-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Авторизация</h3>
+                <button class="close-modal" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="auth-tabs">
+                <button class="tab active" onclick="switchTab('login')">Вход</button>
+                <button class="tab" onclick="switchTab('register')">Регистрация</button>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Email/Логин</label>
+                    <input type="text" id="login-email" placeholder="Email" required>
+                    <div class="error-message" id="login-email-error">Введите логин</div>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="login-password" placeholder="Пароль" required>
+                    <div class="error-message" id="login-password-error">Пароль не может быть пустым</div>
+                </div>
+                <div class="form-group" id="tfa-row" style="display:none;">
+                    <label>Код 2FA</label>
+                    <input type="text" id="login-totp" placeholder="6-значный код" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+                </div>
+                <button type="submit" class="submit-btn" onclick="login(event)">Войти</button>
+            </form>
+            <form id="register-form" style="display: none;">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="register-email" placeholder="example@mail.com" required>
+                    <div class="error-message" id="register-email-error">Введите корректный email</div>
+                </div>
+                <div class="form-group">
+                    <label>Логин</label>
+                    <input type="text" id="register-login" placeholder="Введите логин" required>
+                    <div class="error-message" id="register-login-error">Логин не может быть пустым</div>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="register-password" placeholder="Минимум 6 символов" required>
+                    <div class="error-message" id="register-password-error">Минимум 6 символов</div>
+                </div>
+                <button type="submit" class="submit-btn" onclick="register(event)">Зарегистрироваться</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/js/i18n.js?v=4"></script>
+    <script src="/static/js/app.js?v=11"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>

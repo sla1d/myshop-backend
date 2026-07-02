@@ -1,0 +1,26 @@
+/* Theme: Midnight — Deep blue dark theme (default) */
+[data-theme="midnight"], :root {
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-rgb: 59, 130, 246;
+    --secondary-color: #8b5cf6;
+    --secondary-rgb: 139, 92, 246;
+    --dark-bg: #0f172a;
+    --darker-bg: #020617;
+    --card-bg: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+    --success-color: #10b981;
+    --success-hover: #059669;
+    --success-rgb: 16, 185, 129;
+    --danger-color: #ef4444;
+    --danger-hover: #dc2626;
+    --danger-rgb: 239, 68, 68;
+    --warning-color: #f59e0b;
+    --warning-rgb: 245, 158, 11;
+    --header-bg: rgba(2, 6, 23, 0.95);
+    --btn-text: #ffffff;
+    --btn-warning-text: #000000;
+    --overlay-bg: rgba(0, 0, 0, 0.8);
+}

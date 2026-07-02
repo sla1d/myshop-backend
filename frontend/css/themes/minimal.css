@@ -1,0 +1,26 @@
+/* Theme: Minimal — Black and white for premium stores */
+[data-theme="minimal"] {
+    --primary-color: #171717;
+    --primary-hover: #000000;
+    --primary-rgb: 23, 23, 23;
+    --secondary-color: #525252;
+    --secondary-rgb: 82, 82, 82;
+    --dark-bg: #fafafa;
+    --darker-bg: #ffffff;
+    --card-bg: #f5f5f5;
+    --text-primary: #171717;
+    --text-secondary: #737373;
+    --border-color: #e5e5e5;
+    --success-color: #171717;
+    --success-hover: #000000;
+    --success-rgb: 23, 23, 23;
+    --danger-color: #dc2626;
+    --danger-hover: #b91c1c;
+    --danger-rgb: 220, 38, 38;
+    --warning-color: #a3a3a3;
+    --warning-rgb: 163, 163, 163;
+    --header-bg: rgba(255, 255, 255, 0.95);
+    --btn-text: #ffffff;
+    --btn-warning-text: #ffffff;
+    --overlay-bg: rgba(0, 0, 0, 0.5);
+}
