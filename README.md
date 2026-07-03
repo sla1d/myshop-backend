@@ -1,6 +1,6 @@
-# MyShop API
+# MyShop — SaaS платформа интернет-магазинов
 
-Backend для интернет-магазина электроники. FastAPI + PostgreSQL + Redis + RabbitMQ + Celery.
+Готовая платформа для запуска интернет-магазинов по подписке. Multi-tenant архитектура, оплата ЮKassa, доставка СДЭК, аналитика, RBAC.
 
 ## Стек
 
@@ -8,13 +8,15 @@ Backend для интернет-магазина электроники. FastAPI
 |---|---|
 | Framework | FastAPI 0.104+ |
 | ORM | SQLAlchemy 2.0 (async) |
-| БД | PostgreSQL 16 (prod) / SQLite (dev) |
-| Миграции | Alembic |
-| Авторизация | JWT (access + refresh), bcrypt |
+| БД | PostgreSQL 18 |
+| Авторизация | JWT (access + refresh), bcrypt, 2FA TOTP |
+| RBAC | 28 разрешений, 8 системных ролей |
+| Оплата | ЮKassa (IP фильтрация, идемпотентность) |
 | Кэширование | Redis |
-| Очереди | RabbitMQ (pika) |
+| Очереди | RabbitMQ |
 | Фоновые задачи | Celery |
-| Тестирование | pytest + pytest-asyncio |
+| WebSocket | Уведомления в реальном времени |
+| Тестирование | pytest + pytest-asyncio (51 тест) |
 | CI/CD | GitHub Actions |
 | Контейнеризация | Docker Compose |
 
@@ -30,70 +32,105 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
 
-# 3. Миграции
-cd backend
-alembic upgrade head
+# 3. PostgreSQL
+# Создать БД myshop, настроить DATABASE_URL в backend/.env
 
 # 4. Запуск
-python run.py
+cd backend
+PYTHONPATH=. uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Приложение: http://localhost:8000
-Swagger: http://localhost:8000/docs
-ReDoc: http://localhost:8000/redoc
+- Приложение: http://localhost:8000
+- Landing: http://localhost:8000/landing/
+- Swagger: http://localhost:8000/docs
+- Здоровье: http://localhost:8000/health
 
-## Docker
+## Docker (продакшен)
 
 ```bash
-docker-compose up -d
+# Настройка .env
+cp .env.example .env
+# Заполнить SECRET_KEY, POSTGRES_PASSWORD, YOOKASSA ключи
+
+# Запуск
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-Сервисы: backend (8000), PostgreSQL (5432), Redis (6379), RabbitMQ (5672/15672), Celery worker + beat.
+Сервисы: nginx, backend, PostgreSQL, Redis, RabbitMQ, MinIO, Celery worker + beat, Certbot.
+
+## SaaS модель
+
+| Тариф | Цена | Товары | Заказы | Фичи |
+|---|---|---|---|---|
+| Starter | 990₽/мес | 100 | 1,000 | Каталог, корзина, аналитика |
+| Business | 2,990₽/мес | 1,000 | 10,000 | + Промокоды, отзывы, рассылки |
+| Pro | 9,990₽/мес | ∞ | ∞ | + API, кастомный домен, белый-label |
+
+## Клиентский flow
+
+```
+Landing → "Создать магазин" → Регистрация → Onboarding → Dashboard
+```
+
+- `/landing/` — лендинг с тарифами и формой регистрации
+- `/register-store` — авто-создание tenant + user + подписка
+- `/onboarding.html` — мастер настройки (тема, описание, фичи)
+- `/dashboard.html` — личный кабинет продавца
 
 ## API Endpoints
 
 ### Авторизация
 | Метод | Путь | Описание |
 |---|---|---|
-| POST | `/register` | Регистрация |
+| POST | `/register` | Регистрация пользователя |
+| POST | `/register-store` | Регистрация + создание магазина |
 | POST | `/login` | Вход → access + refresh токены |
+| POST | `/login/2fa` | Вход с 2FA |
 | POST | `/refresh` | Обновление токена |
+| POST | `/logout` | Выход |
 
 ### Товары
 | Метод | Путь | Описание |
 |---|---|---|
-| GET | `/api/products` | Список товаров (search, category, brand, min_price, max_price, min_rating, sort) |
+| GET | `/api/products` | Каталог (search, category, brand, price, rating, sort) |
 | GET | `/api/products/{id}` | Товар по ID |
-| GET | `/api/products/categories` | Список категорий |
-| GET | `/api/products/brands` | Список брендов |
+| GET | `/api/products/categories` | Категории |
+| GET | `/api/products/brands` | Бренды |
+| GET | `/api/products/recommendations` | Рекомендации |
 
 ### Корзина (🔒)
 | Метод | Путь | Описание |
 |---|---|---|
-| GET | `/api/cart` | Получить корзину |
+| GET | `/api/cart` | Корзина |
 | POST | `/api/cart/add` | Добавить товар |
 | PUT | `/api/cart/item/{id}` | Изменить количество |
 | DELETE | `/api/cart/remove` | Удалить товар |
-| DELETE | `/api/cart/clear` | Очистить корзину |
 
 ### Заказы (🔒)
 | Метод | Путь | Описание |
 |---|---|---|
-| POST | `/api/order` | Создать заказ (промокод опционален) |
+| POST | `/api/order` | Создать заказ |
+| GET | `/api/profile/orders` | История заказов |
+| GET | `/api/tracking/{id}` | Трекинг заказа |
+
+### Платежи (🔒)
+| Метод | Путь | Описание |
+|---|---|---|
+| POST | `/api/payments/create` | Создать платёж ЮKassa |
+| GET | `/api/payments/status/{id}` | Статус оплаты |
+| POST | `/api/payments/webhook` | Webhook ЮKassa (IP фильтрация) |
 
 ### Избранное (🔒)
 | Метод | Путь | Описание |
 |---|---|---|
-| GET | `/api/wishlist` | Список избранного |
+| GET | `/api/wishlist` | Список |
 | POST | `/api/wishlist` | Добавить |
 | DELETE | `/api/wishlist/{id}` | Удалить |
-| GET | `/api/wishlist/check/{id}` | Проверить |
 
 ### Отзывы
 | Метод | Путь | Описание |
 |---|---|---|
 | GET | `/api/reviews/product/{id}` | Отзывы товара |
-| GET | `/api/reviews/product/{id}/avg` | Средний рейтинг |
 | POST | `/api/reviews` | Создать отзыв (🔒) |
 
 ### Промокоды
@@ -104,32 +141,49 @@ docker-compose up -d
 ### Профиль (🔒)
 | Метод | Путь | Описание |
 |---|---|---|
-| GET | `/api/profile` | Данные профиля |
-| PATCH | `/api/profile` | Обновить профиль |
+| GET | `/api/profile` | Данные |
+| PATCH | `/api/profile` | Обновить |
 | POST | `/api/profile/change-password` | Сменить пароль |
-| GET | `/api/profile/orders` | История заказов |
 
-### Админ (🔒 admin)
+### Админ (🔒 RBAC)
 | Метод | Путь | Описание |
 |---|---|---|
 | GET | `/api/admin/stats` | Статистика |
-| GET | `/api/admin/users` | Список пользователей |
-| PATCH | `/api/admin/users/{id}/role` | Изменить роль |
+| GET | `/api/admin/users` | Пользователи |
 | GET | `/api/admin/products` | Товары |
 | POST | `/api/admin/products` | Создать товар |
-| PUT | `/api/admin/products/{id}` | Обновить товар |
-| DELETE | `/api/admin/products/{id}` | Удалить товар |
 | GET | `/api/admin/orders` | Заказы |
 | PATCH | `/api/admin/orders/{id}/status` | Статус заказа |
 | GET | `/api/admin/promos` | Промокоды |
-| POST | `/api/admin/promos` | Создать промокод |
-| POST | `/api/upload` | Загрузить изображение |
+
+### Настройки магазина
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/store/settings` | Настройки темы, названия |
+| PUT | `/api/store/settings` | Обновить настройки |
+| POST | `/api/store/generate-store` | Генерация магазина (admin) |
+
+### Личный кабинет
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/billing/subscription` | Подписка |
+| POST | `/api/billing/subscribe` | Оформить подписку |
+
+## Безопасность
+
+- JWT с ротацией refresh токенов
+- 5 попыток входа → блокировка 15 мин
+- RBAC: 28 разрешений, 8 ролей (owner, admin, manager, support, viewer, seller, content, custom)
+- IP фильтрация webhook ЮKassa
+- Идемпотентность платежей
+- HTTPS + security headers
+- Rate limiting
 
 ## Тестовые данные
 
 | Пользователь | Пароль | Роль |
 |---|---|---|
-| `admin` | `admin123` | admin |
+| `admin` | `admin123` | admin (owner) |
 
 Промокоды: `SALE10` (10%), `WELCOME20` (20%), `SUMMER15` (15%).
 
@@ -147,23 +201,43 @@ PYTHONPATH=. pytest tests/ -v
 ```
 backend/
 ├── app/
-│   ├── core/           # config, security, cache, rabbitmq, celery, logging, middleware
+│   ├── core/           # config, security, cache, rabbitmq, celery, logging
 │   ├── database/       # engine, session, base
-│   ├── models/         # SQLAlchemy ORM
+│   ├── models/         # SQLAlchemy ORM (30+ таблиц)
 │   ├── schemas/        # Pydantic
-│   ├── routers/        # API endpoints
+│   ├── routers/        # API endpoints (30+ роутеров)
 │   ├── services/       # Business logic
+│   ├── repositories/   # Repository pattern
+│   ├── rbac/           # RBAC models, deps, seed
+│   ├── security/       # Refresh tokens, login attempts, audit
+│   ├── billing/        # Subscriptions, invoices, payments
+│   ├── integrations/   # YooKassa, Telegram
+│   ├── middleware/      # Tenant, security, license
+│   ├── templates/      # Email HTML шаблоны
 │   ├── tasks/          # Celery tasks
-│   ├── exceptions.py   # Custom exceptions
 │   └── main.py         # App factory
-├── tests/              # pytest tests
+├── tests/              # 51 pytest tests
 ├── alembic/            # Migrations
 ├── Dockerfile
 └── requirements.txt
 frontend/
-├── index.html
-├── css/style.css
-└── js/app.js
+├── index.html          # SPA магазин + админка
+├── css/style.css       # Стили + 6 тем
+├── js/app.js           # Логика (2800+ строк)
+├── js/i18n.js          # EN/RU переводы
+├── manifest.json       # PWA
+└── sw.js               # Service Worker
+landing/
+├── index.html          # SaaS лендинг (тарифы, регистрация)
+├── onboarding.html     # Мастер настройки магазина
+└── dashboard.html      # Личный кабинет продавца
+deploy/
+└── nginx/default.conf  # Nginx: SSL, WebSocket, security headers
+scripts/
+├── setup-server.sh     # Настройка VPS
+├── install.sh          # CLI установщик
+├── backup.sh           # Бэкап БД
+└── restore.sh          # Восстановление БД
 ```
 
 ## Лицензия
