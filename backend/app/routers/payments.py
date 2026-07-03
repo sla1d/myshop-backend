@@ -1,22 +1,53 @@
 """Payment API — YooKassa integration for order payments."""
+import ipaddress
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.websocket import manager
 from app.database.connection import get_async_session
 from app.integrations.yookassa import yookassa
-from app.models.order import Order
 from app.models.user import User
+from app.repositories.order_repo import OrderRepository
 
 logger = logging.getLogger("myshop.payments")
 
 router = APIRouter(prefix="/payments", tags=["Платежи"])
+
+# YooKassa official subnets (https://yookassa.ru/developers/api#ip-whitelist)
+YOOKASSA_IPS = [
+    ipaddress.ip_network("185.71.76.0/27"),
+    ipaddress.ip_network("185.71.77.0/27"),
+    ipaddress.ip_network("77.75.153.0/25"),
+    ipaddress.ip_network("77.75.154.128/25"),
+    ipaddress.ip_address("77.75.156.11"),
+    ipaddress.ip_address("77.75.156.35"),
+]
+
+
+async def verify_yookassa_ip(request: Request):
+    """Dependency — validates that webhook originates from YooKassa."""
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    client_ip_str = forwarded_for.split(",")[0].strip() if forwarded_for else request.client.host
+
+    try:
+        client_ip = ipaddress.ip_address(client_ip_str)
+    except ValueError:
+        logger.warning("YooKassa webhook: invalid IP format: %s", client_ip_str)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid IP")
+
+    is_valid = any(
+        client_ip in net if isinstance(net, ipaddress.IPv4Network) else client_ip == net
+        for net in YOOKASSA_IPS
+    )
+
+    if not is_valid:
+        logger.warning("YooKassa webhook: untrusted IP: %s", client_ip_str)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Untrusted IP")
 
 
 class PaymentCreateRequest(BaseModel):
@@ -45,15 +76,15 @@ async def create_payment(
     session: AsyncSession = Depends(get_async_session),
 ):
     """Create a YooKassa payment for an order. Returns redirect URL."""
-    result = await session.execute(
-        select(Order).where(Order.id == body.order_id, Order.user_id == user.id)
-    )
-    order = result.scalars().first()
-    if not order:
+    repo = OrderRepository(session)
+
+    order = await repo.get_by_id(body.order_id)
+    if not order or order.user_id != user.id:
         raise HTTPException(status_code=404, detail="Заказ не найден")
     if order.payment_status == "succeeded":
         raise HTTPException(status_code=400, detail="Заказ уже оплачен")
 
+    idempotency_key = f"order-{order.id}-pay"
     description = f"Заказ #{order.id} — MyShop"
     metadata = {"order_id": str(order.id), "user_id": str(user.id)}
 
@@ -62,20 +93,18 @@ async def create_payment(
         description=description,
         return_url=body.return_url,
         metadata=metadata,
+        idempotency_key=idempotency_key,
     )
 
     if not payment:
         raise HTTPException(status_code=502, detail="Не удалось создать платёж")
 
-    # Save payment info to order
     order.payment_id = payment["id"]
     order.payment_status = payment.get("status", "pending")
     order.payment_method = payment.get("payment_method", {}).get("type")
     await session.commit()
 
-    confirmation = payment.get("confirmation", {})
-    confirmation_url = confirmation.get("confirmation_url", "")
-
+    confirmation_url = payment.get("confirmation", {}).get("confirmation_url", "")
     logger.info("Payment created for order #%s: %s", order.id, payment["id"])
 
     return PaymentResponse(
@@ -92,11 +121,10 @@ async def get_payment_status(
     session: AsyncSession = Depends(get_async_session),
 ):
     """Get payment status for an order."""
-    result = await session.execute(
-        select(Order).where(Order.id == order_id, Order.user_id == user.id)
-    )
-    order = result.scalars().first()
-    if not order:
+    repo = OrderRepository(session)
+
+    order = await repo.get_by_id(order_id)
+    if not order or order.user_id != user.id:
         raise HTTPException(status_code=404, detail="Заказ не найден")
 
     return PaymentStatusResponse(
@@ -112,51 +140,47 @@ async def get_payment_status(
 async def yookassa_webhook(
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _ip_check=Depends(verify_yookassa_ip),
 ):
-    """YooKassa webhook — receives payment status updates."""
+    """YooKassa webhook — receives payment status updates securely."""
     body = await request.json()
     event = body.get("event")
     payment_data = body.get("object", {})
 
     payment_id = payment_data.get("id")
-    status = payment_data.get("status")
-    metadata = payment_data.get("metadata", {})
+    new_status = payment_data.get("status")
 
-    logger.info("YooKassa webhook: event=%s, payment=%s, status=%s", event, payment_id, status)
+    logger.info("YooKassa webhook: event=%s, payment=%s, status=%s", event, payment_id, new_status)
 
     if not payment_id:
         raise HTTPException(status_code=400, detail="Missing payment_id")
 
-    # Find order by payment_id
-    result = await session.execute(
-        select(Order).where(Order.payment_id == payment_id)
-    )
-    order = result.scalars().first()
+    repo = OrderRepository(session)
+    order = await repo.get_by_payment_id(payment_id)
+
     if not order:
         logger.warning("Order not found for payment %s", payment_id)
         return {"status": "ok"}
 
-    # Update order based on payment status
-    if status == "succeeded":
-        order.payment_status = "succeeded"
-        order.status = "paid"
+    # Idempotency: skip if already processed
+    if order.payment_status == "succeeded":
+        return {"status": "already_processed"}
+
+    if new_status == "succeeded":
+        await repo.mark_paid(order, payment_id, order.payment_method)
         logger.info("Order #%s marked as paid", order.id)
 
-        # Notify user via WebSocket
         await manager.send(order.user_id, {
             "type": "payment_succeeded",
             "order_id": order.id,
             "total": order.total,
         })
 
-    elif status == "canceled":
-        order.payment_status = "canceled"
-        order.status = "cancelled"
+    elif new_status == "canceled":
+        await repo.mark_canceled(order)
         logger.info("Order #%s payment canceled", order.id)
 
-    elif status == "waiting_for_capture":
-        order.payment_status = "waiting_for_capture"
-
-    await session.commit()
+    elif new_status == "waiting_for_capture":
+        await repo.update_payment_status(order, "waiting_for_capture")
 
     return {"status": "ok"}

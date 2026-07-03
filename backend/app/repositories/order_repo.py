@@ -50,6 +50,33 @@ class OrderRepository(BaseRepository[Order]):
         result = await self.session.execute(stmt)
         return {r[0]: r[1] for r in result.all()}
 
+    async def get_by_payment_id(self, payment_id: str) -> Optional[Order]:
+        """Find order by YooKassa payment_id."""
+        result = await self.session.execute(
+            select(Order).where(Order.payment_id == payment_id)
+        )
+        return result.scalars().first()
+
+    async def mark_paid(self, order: Order, payment_id: str, payment_method: str | None = None) -> None:
+        """Mark order as paid after successful webhook."""
+        order.payment_id = payment_id
+        order.payment_status = "succeeded"
+        order.status = "paid"
+        if payment_method:
+            order.payment_method = payment_method
+        await self.session.commit()
+
+    async def mark_canceled(self, order: Order) -> None:
+        """Mark order as canceled after canceled webhook."""
+        order.payment_status = "canceled"
+        order.status = "cancelled"
+        await self.session.commit()
+
+    async def update_payment_status(self, order: Order, payment_status: str) -> None:
+        """Update payment status (e.g. waiting_for_capture)."""
+        order.payment_status = payment_status
+        await self.session.commit()
+
     async def get_revenue(
         self,
         tenant_id: int | None = None,

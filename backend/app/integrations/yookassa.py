@@ -40,16 +40,16 @@ class YooKassaService:
         description: str = "",
         return_url: str = "",
         metadata: dict | None = None,
+        idempotency_key: str = "",
     ) -> Optional[dict]:
-        """Create a payment."""
-        import uuid
-
+        """Create a payment with idempotency key."""
         if not self.shop_id or not self.secret_key:
             logger.debug("YooKassa not configured")
             return None
 
-        idempotency_key = str(uuid.uuid4())
-        headers = {**self._headers, "Idempotence-Key": idempotency_key}
+        import uuid
+        key = idempotency_key or str(uuid.uuid4())
+        headers = {**self._headers, "Idempotence-Key": key}
 
         payload = {
             "amount": {

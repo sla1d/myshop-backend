@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding — MyShop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .wizard { background: #fff; border-radius: 16px; padding: 40px; max-width: 520px; width: 90%; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+        .step-indicator { display: flex; gap: 8px; margin-bottom: 30px; }
+        .step-dot { flex: 1; height: 4px; border-radius: 2px; background: #e2e8f0; transition: background 0.3s; }
+        .step-dot.active { background: #3b82f6; }
+        .step-dot.done { background: #22c55e; }
+        h2 { font-size: 22px; margin-bottom: 8px; }
+        .subtitle { color: #64748b; font-size: 14px; margin-bottom: 25px; }
+        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+        .theme-card { border: 2px solid #e2e8f0; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .theme-card:hover { border-color: #3b82f6; }
+        .theme-card.selected { border-color: #3b82f6; background: #eff6ff; }
+        .theme-preview { height: 40px; border-radius: 6px; margin-bottom: 8px; }
+        .theme-name { font-size: 13px; font-weight: 500; }
+        label { display: block; margin-bottom: 15px; }
+        label span { display: block; font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; }
+        .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; text-align: center; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-outline { background: #fff; color: #3b82f6; border: 2px solid #3b82f6; margin-top: 10px; }
+        .features-check { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; }
+        .feature-check { display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 8px; font-size: 14px; cursor: pointer; }
+        .feature-check input { width: auto; }
+        .success-icon { font-size: 60px; text-align: center; margin-bottom: 20px; }
+        .store-link { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0; }
+        .store-link a { color: #16a34a; font-weight: 600; text-decoration: none; font-size: 16px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="wizard">
+        <!-- Step 1: Theme -->
+        <div id="step1">
+            <div class="step-indicator">
+                <div class="step-dot active"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+            </div>
+            <h2>Выберите тему</h2>
+            <p class="subtitle">Можно изменить позже в настройках</p>
+            <div class="theme-grid">
+                <div class="theme-card selected" onclick="selectTheme(this, 'midnight')">
+                    <div class="theme-preview" style="background:linear-gradient(135deg,#0f172a,#1e293b);"></div>
+                    <div class="theme-name">Midnight</div>
+                </div>
+                <div class="theme-card" onclick="selectTheme(this, 'light')">
+                    <div class="theme-preview" style="background:linear-gradient(135deg,#f8fafc,#e2e8f0);"></div>
+                    <div class="theme-name">Light</div>
+                </div>
+                <div class="theme-card" onclick="selectTheme(this, 'nature')">
+                    <div class="theme-preview" style="background:linear-gradient(135deg,#059669,#10b981);"></div>
+                    <div class="theme-name">Nature</div>
+                </div>
+                <div class="theme-card" onclick="selectTheme(this, 'rose')">
+                    <div class="theme-preview" style="background:linear-gradient(135deg,#e11d48,#f43f5e);"></div>
+                    <div class="theme-name">Rose</div>
+                </div>
+                <div class="theme-card" onclick="selectTheme(this, 'cyber')">
+                    <div class="theme-preview" style="background:linear-gradient(135deg,#7c3aed,#a855f7);"></div>
+                    <div class="theme-name">Cyber</div>
+                </div>
+                <div class="theme-card" onclick="selectTheme(this, 'minimal')">
+                    <div class="theme-preview" style="background:linear-gradient(135deg,#fafafa,#d4d4d4);"></div>
+                    <div class="theme-name">Minimal</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="goStep(2)">Далее</button>
+        </div>
+
+        <!-- Step 2: Store Info -->
+        <div id="step2" class="hidden">
+            <div class="step-indicator">
+                <div class="step-dot done"></div>
+                <div class="step-dot active"></div>
+                <div class="step-dot"></div>
+            </div>
+            <h2>Настройте магазин</h2>
+            <p class="subtitle">Расскажите о вашем бизнесе</p>
+            <label>
+                <span>Описание магазина</span>
+                <input id="onbDescription" placeholder="Продажа электроники и гаджетов">
+            </label>
+            <label>
+                <span>Телефон для связи</span>
+                <input id="onbPhone" placeholder="+7 (999) 123-45-67">
+            </label>
+            <label>
+                <span>Город</span>
+                <input id="onbCity" placeholder="Москва">
+            </label>
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-outline" onclick="goStep(1)" style="flex:0 0 auto;width:auto;padding:12px 24px;">Назад</button>
+                <button class="btn btn-primary" onclick="goStep(3)" style="flex:1;">Далее</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Features & Done -->
+        <div id="step3" class="hidden">
+            <div class="step-indicator">
+                <div class="step-dot done"></div>
+                <div class="step-dot done"></div>
+                <div class="step-dot active"></div>
+            </div>
+            <h2>Включите функции</h2>
+            <p class="subtitle">Выберите что нужно вашему магазину</p>
+            <div class="features-check">
+                <label class="feature-check"><input type="checkbox" checked disabled> 📦 Каталог</label>
+                <label class="feature-check"><input type="checkbox" checked disabled> 🛒 Корзина</label>
+                <label class="feature-check"><input type="checkbox" id="featReviews" checked> ⭐ Отзывы</label>
+                <label class="feature-check"><input type="checkbox" id="featPromo" checked> 🏷️ Промокоды</label>
+                <label class="feature-check"><input type="checkbox" id="featWishlist" checked> ❤️ Избранное</label>
+                <label class="feature-check"><input type="checkbox" id="featFlash"> ⚡ Flash Sales</label>
+                <label class="feature-check"><input type="checkbox" id="featLoyalty"> 💎 Лояльность</label>
+                <label class="feature-check"><input type="checkbox" id="featReferral"> 🎁 Рефералы</label>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-outline" onclick="goStep(2)" style="flex:0 0 auto;width:auto;padding:12px 24px;">Назад</button>
+                <button class="btn btn-primary" onclick="finishOnboarding()" id="finishBtn" style="flex:1;">Запустить магазин</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div id="step4" class="hidden">
+            <div class="success-icon">🎉</div>
+            <h2 style="text-align:center;">Магазин готов!</h2>
+            <p class="subtitle" style="text-align:center;">Ваш интернет-магазин создан и работает</p>
+            <div class="store-link">
+                <a id="storeLink" href="#" target="_blank"></a>
+            </div>
+            <p style="text-align:center;font-size:14px;color:#64748b;margin-bottom:20px;">
+                Логин: <strong id="loginInfo"></strong>
+            </p>
+            <button class="btn btn-primary" onclick="goToDashboard()">Перейти в панель управления</button>
+            <button class="btn btn-outline" onclick="viewStore()" style="margin-top:10px;">Посмотреть магазин</button>
+        </div>
+    </div>
+
+    <script>
+    const API = window.location.hostname === 'localhost'
+        ? 'http://localhost:8000'
+        : 'https://' + window.location.hostname;
+
+    let selectedTheme = 'midnight';
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('slug') || 'mystore';
+    const storeName = params.get('store') || 'My Store';
+
+    function selectTheme(el, theme) {
+        document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedTheme = theme;
+    }
+
+    function goStep(n) {
+        document.querySelectorAll('[id^=step]').forEach(s => s.classList.add('hidden'));
+        document.getElementById('step' + n).classList.remove('hidden');
+    }
+
+    async function finishOnboarding() {
+        const btn = document.getElementById('finishBtn');
+        btn.disabled = true;
+        btn.textContent = 'Сохраняю...';
+
+        const token = localStorage.getItem('accessToken');
+
+        // Update store settings
+        await fetch(API + '/api/store/settings', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify({
+                theme: selectedTheme,
+                store_name: storeName,
+            }),
+        });
+
+        // Show success
+        document.getElementById('storeLink').href = '#';
+        document.getElementById('storeLink').textContent = slug + '.myshop.com';
+        document.getElementById('loginInfo').textContent = localStorage.getItem('user_id') ? 'Ваш логин' : slug;
+
+        goStep(4);
+    }
+
+    function goToStore() {
+        window.location.href = '/?tenant=' + slug;
+    }
+
+    function goToDashboard() {
+        window.location.href = '/admin.html';
+    }
+
+    function viewStore() {
+        window.open('/?tenant=' + slug, '_blank');
+    }
+    </script>
+</body>
+</html>

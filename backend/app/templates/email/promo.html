@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0f172a;font-family:Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;background:#1e293b;border-radius:16px;overflow:hidden;margin-top:20px;margin-bottom:20px;">
+    <div style="background:linear-gradient(135deg,#f59e0b,#ef4444);padding:30px;text-align:center;">
+        <h1 style="color:#fff;margin:0;font-size:24px;">🔥 Акция!</h1>
+        <p style="color:rgba(255,255,255,0.9);margin:5px 0 0;">{{promo_name}}</p>
+    </div>
+    <div style="padding:30px;color:#e2e8f0;">
+        <h2 style="color:#f59e0b;margin-top:0;">{{promo_name}}</h2>
+        <p>Здравствуйте, {{username}}!</p>
+        <p>{{promo_description}}</p>
+        <div style="background:#0f172a;border-radius:8px;padding:20px;margin:15px 0;text-align:center;">
+            <p style="margin:0;color:#64748b;font-size:14px;">Код промо</p>
+            <p style="margin:5px 0;font-size:28px;font-weight:bold;color:#f59e0b;letter-spacing:2px;">{{promo_code}}</p>
+            {% if discount_percent %}
+            <p style="margin:0;color:#22c55e;font-size:16px;">Скидка {{discount_percent}}%</p>
+            {% endif %}
+            {% if discount_amount %}
+            <p style="margin:0;color:#22c55e;font-size:16px;">Скидка {{discount_amount}} ₽</p>
+            {% endif %}
+        </div>
+        {% if valid_until %}
+        <p style="color:#ef4444;font-size:14px;">⏰ Действует до: {{valid_until}}</p>
+        {% endif %}
+        <div style="text-align:center;margin:20px 0;">
+            <a href="{{store_url}}" style="background:#f59e0b;color:#fff;padding:12px 30px;border-radius:8px;text-decoration:none;font-weight:bold;">Использовать промокод</a>
+        </div>
+    </div>
+    <div style="background:#0f172a;padding:20px;text-align:center;color:#64748b;font-size:12px;">
+        <p style="margin:0;">© 2024 {{store_name}}. Все права защищены.</p>
+    </div>
+</div>
+</body>
+</html>

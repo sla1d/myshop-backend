@@ -41,3 +41,51 @@ def send_order_status_email(order_id: int, username: str, email: str, status: st
     )
     logger.info("[Email] Status update → %s (order #%d, status=%s)", email, order_id, status)
     return {"status": "sent", "to": email, "template": "order_status_update"}
+
+
+def send_welcome_email(username: str, email: str, store_name: str = "MyShop", store_url: str = "https://myshop.com", cashback: int = 0):
+    """Отправить приветственный email."""
+    html = render_template(
+        "welcome.html",
+        username=username,
+        store_name=store_name,
+        store_url=store_url,
+        cashback=cashback or None,
+    )
+    logger.info("[Email] Welcome → %s", email)
+    return {"status": "sent", "to": email, "template": "welcome"}
+
+
+def send_shipping_email(order_id: int, username: str, email: str, address: str, tracking_number: str = None, carrier: str = None, estimated_delivery: str = None, tracking_url: str = None, store_name: str = "MyShop"):
+    """Отправить email об отправке заказа."""
+    html = render_template(
+        "shipping.html",
+        order_id=order_id,
+        username=username,
+        address=address,
+        tracking_number=tracking_number,
+        carrier=carrier,
+        estimated_delivery=estimated_delivery,
+        tracking_url=tracking_url,
+        store_name=store_name,
+    )
+    logger.info("[Email] Shipping → %s (order #%d)", email, order_id)
+    return {"status": "sent", "to": email, "template": "shipping"}
+
+
+def send_promo_email(username: str, email: str, promo_name: str, promo_code: str, promo_description: str = "", discount_percent: int = None, discount_amount: int = None, valid_until: str = None, store_name: str = "MyShop", store_url: str = "https://myshop.com"):
+    """Отправить промо email."""
+    html = render_template(
+        "promo.html",
+        username=username,
+        promo_name=promo_name,
+        promo_code=promo_code,
+        promo_description=promo_description,
+        discount_percent=discount_percent,
+        discount_amount=discount_amount,
+        valid_until=valid_until,
+        store_name=store_name,
+        store_url=store_url,
+    )
+    logger.info("[Email] Promo → %s (code=%s)", email, promo_code)
+    return {"status": "sent", "to": email, "template": "promo"}

@@ -297,7 +297,8 @@
             <div class="container">
                 <h2 class="section-title" data-i18n="admin_title">Админ-панель</h2>
                 <div class="admin-tabs">
-                    <button class="admin-tab active" onclick="adminTab('stats')" data-i18n="stats">Статистика</button>
+                    <button class="admin-tab active" onclick="adminTab('guide')" data-i18n="guide_tab">Главное</button>
+                    <button class="admin-tab" onclick="adminTab('stats')" data-i18n="stats">Статистика</button>
                     <button class="admin-tab" onclick="adminTab('products')" data-i18n="products_tab">Товары</button>
                     <button class="admin-tab" onclick="adminTab('users')" data-i18n="users_tab">Пользователи</button>
                     <button class="admin-tab" onclick="adminTab('rbac')" data-i18n="rbac_tab">RBAC</button>
@@ -463,8 +464,8 @@
 
     <div class="toast" id="toast"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/static/js/i18n.js?v=4"></script>
-    <script src="/static/js/app.js?v=11"></script>
+    <script src="/static/js/i18n.js?v=5"></script>
+    <script src="/static/js/app.js?v=13"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(() => {});

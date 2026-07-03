@@ -4,59 +4,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyShop — Интернет-магазин под ключ</title>
+    <meta name="description" content="Готовая платформа для интернет-магазина. Установка за 5 минут, оплата через ЮKassa, доставка СДЭК.">
+    <meta property="og:title" content="MyShop — Интернет-магазин под ключ">
+    <meta property="og:description" content="Запустите свой интернет-магазин за 5 минут. Каталог, корзина, оплата, доставка, аналитика.">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b; background: #fff; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
         /* Header */
-        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 0; }
+        header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 15px 0; position: sticky; top: 0; z-index: 100; }
         nav { display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 24px; font-weight: bold; }
-        .nav-links a { color: white; text-decoration: none; margin-left: 30px; opacity: 0.9; }
-        .nav-links a:hover { opacity: 1; }
+        .logo { font-size: 24px; font-weight: 800; color: #3b82f6; }
+        .nav-links a { color: #64748b; text-decoration: none; margin-left: 30px; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: #3b82f6; }
+        .nav-cta { background: #3b82f6; color: #fff !important; padding: 8px 20px; border-radius: 8px; }
+        .nav-cta:hover { background: #2563eb; }
 
         /* Hero */
-        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0; text-align: center; }
-        .hero h1 { font-size: 48px; margin-bottom: 20px; }
-        .hero p { font-size: 20px; opacity: 0.9; margin-bottom: 30px; }
-        .btn { display: inline-block; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: transform 0.2s; }
-        .btn:hover { transform: translateY(-2px); }
-        .btn-primary { background: white; color: #667eea; }
-        .btn-secondary { background: transparent; border: 2px solid white; color: white; }
+        .hero { padding: 100px 0 80px; text-align: center; background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); }
+        .hero h1 { font-size: 52px; font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .hero h1 span { color: #3b82f6; }
+        .hero p { font-size: 20px; color: #64748b; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .hero-buttons { display: flex; gap: 15px; justify-content: center; }
+        .btn { display: inline-block; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; transition: all 0.2s; font-size: 16px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-outline { background: #fff; color: #3b82f6; border: 2px solid #3b82f6; }
+        .btn-outline:hover { background: #eff6ff; }
+        .hero-stats { display: flex; gap: 60px; justify-content: center; margin-top: 50px; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 32px; font-weight: 800; color: #3b82f6; }
+        .stat-label { font-size: 14px; color: #64748b; }
 
         /* Features */
-        .features { padding: 80px 0; background: #f8f9fa; }
-        .features h2 { text-align: center; font-size: 36px; margin-bottom: 50px; }
+        .features { padding: 80px 0; }
+        .section-title { text-align: center; font-size: 36px; font-weight: 800; margin-bottom: 15px; }
+        .section-subtitle { text-align: center; color: #64748b; font-size: 18px; margin-bottom: 50px; }
         .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .feature-card { background: white; padding: 30px; border-radius: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .feature-card h3 { margin-bottom: 15px; }
-        .feature-icon { font-size: 48px; margin-bottom: 15px; }
+        .feature-card { background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .feature-card:hover { border-color: #3b82f6; box-shadow: 0 4px 20px rgba(59,130,246,0.1); }
+        .feature-icon { font-size: 40px; margin-bottom: 15px; }
+        .feature-card h3 { margin-bottom: 10px; font-size: 18px; }
+        .feature-card p { color: #64748b; font-size: 14px; }
+
+        /* How it works */
+        .how { padding: 80px 0; background: #f8fafc; }
+        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 50px; }
+        .step { text-align: center; }
+        .step-number { width: 60px; height: 60px; background: #3b82f6; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; margin: 0 auto 20px; }
+        .step h3 { margin-bottom: 10px; }
+        .step p { color: #64748b; font-size: 14px; }
 
         /* Pricing */
         .pricing { padding: 80px 0; }
-        .pricing h2 { text-align: center; font-size: 36px; margin-bottom: 50px; }
         .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .price-card { background: white; border: 2px solid #e0e0e0; border-radius: 10px; padding: 40px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; }
-        .price-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .price-card.popular { border-color: #667eea; position: relative; }
-        .price-card.popular::before { content: "Популярный"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #667eea; color: white; padding: 5px 20px; border-radius: 20px; font-size: 14px; }
-        .price { font-size: 48px; font-weight: bold; margin: 20px 0; }
-        .price span { font-size: 16px; font-weight: normal; color: #666; }
-        .price-features { list-style: none; text-align: left; margin: 30px 0; }
-        .price-features li { padding: 10px 0; border-bottom: 1px solid #eee; }
-        .price-features li::before { content: "✓"; color: #667eea; margin-right: 10px; }
+        .price-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 40px 30px; text-align: center; transition: all 0.2s; position: relative; }
+        .price-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .price-card.popular { border-color: #3b82f6; }
+        .price-card.popular::before { content: "Популярный"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: #fff; padding: 4px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+        .price-card h3 { font-size: 20px; margin-bottom: 5px; }
+        .price-card .price-desc { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+        .price { font-size: 42px; font-weight: 800; margin: 10px 0; }
+        .price span { font-size: 16px; font-weight: normal; color: #64748b; }
+        .price-yearly { font-size: 14px; color: #22c55e; margin-bottom: 20px; }
+        .price-features { list-style: none; text-align: left; margin: 25px 0; }
+        .price-features li { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .price-features li::before { content: "✓"; color: #3b82f6; margin-right: 10px; font-weight: bold; }
+        .price-card .btn { width: 100%; display: block; }
+        .price-card .btn-outline { color: #3b82f6; }
 
-        /* Demo */
-        .demo { background: #f8f9fa; padding: 80px 0; text-align: center; }
-        .demo h2 { font-size: 36px; margin-bottom: 20px; }
+        /* Integrations */
+        .integrations { padding: 80px 0; background: #f8fafc; }
+        .integration-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 40px; }
+        .integration-card { background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
+        .integration-icon { font-size: 32px; margin-bottom: 10px; }
+        .integration-card p { font-size: 14px; color: #64748b; }
+
+        /* CTA */
+        .cta { padding: 80px 0; text-align: center; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: #fff; }
+        .cta h2 { font-size: 36px; margin-bottom: 15px; }
+        .cta p { font-size: 18px; opacity: 0.9; margin-bottom: 30px; }
+        .cta .btn { background: #fff; color: #3b82f6; }
+        .cta .btn:hover { background: #f0f0f0; }
 
         /* Footer */
-        footer { background: #333; color: white; padding: 40px 0; text-align: center; }
+        footer { background: #0f172a; color: #94a3b8; padding: 40px 0; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+        .footer-brand .logo { color: #fff; margin-bottom: 10px; display: block; }
+        .footer-brand p { font-size: 14px; }
+        footer h4 { color: #fff; margin-bottom: 15px; font-size: 14px; }
+        footer a { color: #94a3b8; text-decoration: none; display: block; margin-bottom: 8px; font-size: 14px; transition: color 0.2s; }
+        footer a:hover { color: #3b82f6; }
+        .footer-bottom { border-top: 1px solid #1e293b; margin-top: 30px; padding-top: 20px; text-align: center; font-size: 13px; }
 
         @media (max-width: 768px) {
-            .features-grid, .pricing-grid { grid-template-columns: 1fr; }
+            .features-grid, .pricing-grid, .steps, .integration-grid { grid-template-columns: 1fr; }
             .hero h1 { font-size: 32px; }
+            .hero-stats { gap: 30px; flex-wrap: wrap; }
+            .hero-buttons { flex-direction: column; align-items: center; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
         }
     </style>
 </head>
@@ -67,9 +118,10 @@
                 <div class="logo">MyShop</div>
                 <div class="nav-links">
                     <a href="#features">Возможности</a>
+                    <a href="#how">Как работает</a>
                     <a href="#pricing">Тарифы</a>
-                    <a href="#demo">Демо</a>
-                    <a href="#contact">Контакты</a>
+                    <a href="#integrations">Интеграции</a>
+                    <a href="#" onclick="event.preventDefault();openRegister()" class="nav-cta">Начать</a>
                 </div>
             </nav>
         </div>
@@ -77,46 +129,87 @@
 
     <section class="hero">
         <div class="container">
-            <h1>Интернет-магазин под ключ</h1>
-            <p>Готовое решение для продажи электроники. Установка за 5 минут.</p>
-            <a href="#pricing" class="btn btn-primary">Выбрать тариф</a>
-            <a href="#demo" class="btn btn-secondary" style="margin-left: 15px;">Попробовать демо</a>
+            <h1>Интернет-магазин <span>под ключ</span></h1>
+            <p>Запустите продажи за 5 минут. Каталог, корзина, оплата ЮKassa, доставка СДЭК, аналитика — всё готово.</p>
+            <div class="hero-buttons">
+                <button onclick="openRegister()" class="btn btn-primary">Создать магазин</button>
+                <a href="#how" class="btn btn-outline">Как это работает</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-number">5 мин</div>
+                    <div class="stat-label">установка</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">30+</div>
+                    <div class="stat-label">фич</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">работает</div>
+                </div>
+            </div>
         </div>
     </section>
 
     <section class="features" id="features">
         <div class="container">
-            <h2>Возможности</h2>
+            <h2 class="section-title">Всё для продаж</h2>
+            <p class="section-subtitle">Полноценный интернет-магазин без программиста</p>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🛒</div>
-                    <h3>Полный функционал</h3>
-                    <p>Каталог, корзина, заказы, оплата, доставка, отзывы, избранное</p>
+                    <div class="feature-icon">📦</div>
+                    <h3>Каталог товаров</h3>
+                    <p>Фото, описания, категории, фильтры, поиск, сравнение, избранное</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">👥</div>
-                    <h3>Мульти-тенант</h3>
-                    <p>Один сервер — множество магазинов. Каждый клиент изолирован</p>
+                    <div class="feature-icon">💳</div>
+                    <h3>Оплата онлайн</h3>
+                    <p>ЮKassa, банковские карты, СБП. Автоматическое подтверждение</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚚</div>
+                    <h3>Доставка</h3>
+                    <p>СДЭК, почта России, самовывоз. Трекинг заказов в реальном времени</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📊</div>
                     <h3>Аналитика</h3>
-                    <p>Продажи, популярные товары, конверсия, выручка</p>
+                    <p>Продажи, выручка, популярные товары, конверсия, воронка продаж</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🔒</div>
                     <h3>Безопасность</h3>
-                    <p>JWT, HTTPS, rate limiting, бэкапы, SSL</p>
+                    <p>JWT, HTTPS, RBAC, rate limiting, 2FA, аудит действий</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📱</div>
-                    <h3>Адаптивный дизайн</h3>
-                    <p>Работает на всех устройствах: ПК, планшет, телефон</p>
+                    <h3>Мобильный вид</h3>
+                    <p>Адаптивный дизайн работает на телефоне, планшете и ПК</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Быстрый старт</h3>
-                    <p>Установка за 5 минут. Не нужен программист</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="how" id="how">
+        <div class="container">
+            <h2 class="section-title">Как это работает</h2>
+            <p class="section-subtitle">3 шага до вашего магазина</p>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Регистрация</h3>
+                    <p>Создайте аккаунт и выберите тариф. Это займёт 30 секунд</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Настройка</h3>
+                    <p>Добавьте товары, настройте оплату и доставку. Или используйте демо-данные</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Продажи</h3>
+                    <p>Получайте заказы и деньги. Мы позаботимся об инфраструктуре</p>
                 </div>
             </div>
         </div>
@@ -124,72 +217,271 @@
 
     <section class="pricing" id="pricing">
         <div class="container">
-            <h2>Тарифы</h2>
+            <h2 class="section-title">Тарифы</h2>
+            <p class="section-subtitle">Начните бесплатно, масштабируйтесь по мере роста</p>
             <div class="pricing-grid">
                 <div class="price-card">
                     <h3>Starter</h3>
-                    <div class="price">2 990 ₽<span>/мес</span></div>
+                    <p class="price-desc">Для начинающих продавцов</p>
+                    <div class="price">990 ₽<span>/мес</span></div>
+                    <p class="price-yearly">или 9 900 ₽/год (−17%)</p>
                     <ul class="price-features">
                         <li>До 100 товаров</li>
-                        <li>До 10 пользователей</li>
+                        <li>До 1 000 заказов</li>
                         <li>Базовая аналитика</li>
-                        <li>Email поддержка</li>
+                        <li>Корзина и оформление</li>
                         <li>SSL включён</li>
                     </ul>
-                    <a href="#contact" class="btn btn-primary" style="width: 100%; display: block;">Выбрать</a>
+                    <a href="#" onclick="openRegister('starter')" class="btn btn-outline">Начать</a>
                 </div>
                 <div class="price-card popular">
-                    <h3>Pro</h3>
-                    <div class="price">7 990 ₽<span>/мес</span></div>
+                    <h3>Business</h3>
+                    <p class="price-desc">Для растущих магазинов</p>
+                    <div class="price">2 990 ₽<span>/мес</span></div>
+                    <p class="price-yearly">или 29 900 ₽/год (−17%)</p>
                     <ul class="price-features">
-                        <li>До 1000 товаров</li>
-                        <li>До 50 пользователей</li>
+                        <li>До 1 000 товаров</li>
+                        <li>До 10 000 заказов</li>
+                        <li>Промокоды и скидки</li>
+                        <li>Отзывы покупателей</li>
                         <li>Расширенная аналитика</li>
-                        <li>Telegram уведомления</li>
-                        <li>Приоритетная поддержка</li>
-                        <li>Интеграция с маркетплейсами</li>
+                        <li>Email рассылки</li>
                     </ul>
-                    <a href="#contact" class="btn btn-primary" style="width: 100%; display: block;">Выбрать</a>
+                    <a href="#" onclick="openRegister('business')" class="btn btn-primary">Выбрать</a>
                 </div>
                 <div class="price-card">
-                    <h3>Enterprise</h3>
-                    <div class="price">19 990 ₽<span>/мес</span></div>
+                    <h3>Pro</h3>
+                    <p class="price-desc">Для профессионалов</p>
+                    <div class="price">9 990 ₽<span>/мес</span></div>
+                    <p class="price-yearly">или 99 900 ₽/год (−17%)</p>
                     <ul class="price-features">
                         <li>Безлимит товаров</li>
-                        <li>Безлимит пользователей</li>
-                        <li>Вся аналитика</li>
-                        <li>WebSocket уведомления</li>
-                        <li>Выделенная поддержка</li>
-                        <li>Кастомизация под вас</li>
+                        <li>Безлимит заказов</li>
+                        <li>Кастомный домен</li>
+                        <li>API доступ</li>
+                        <li>Белый-label</li>
+                        <li>Приоритетная поддержка</li>
                         <li>SLA 99.9%</li>
                     </ul>
-                    <a href="#contact" class="btn btn-primary" style="width: 100%; display: block;">Выбрать</a>
+                    <a href="#" onclick="openRegister('pro')" class="btn btn-outline">Связаться</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="demo" id="demo">
+    <section class="integrations" id="integrations">
         <div class="container">
-            <h2>Попробуйте бесплатно</h2>
-            <p style="margin-bottom: 30px; font-size: 18px;">Демо-версия сбрасывается каждые 24 часа</p>
-            <a href="https://demo.myshop.com" class="btn btn-primary">Запустить демо</a>
+            <h2 class="section-title">Интеграции</h2>
+            <p class="section-subtitle">Всё необходимое для работы уже подключено</p>
+            <div class="integration-grid">
+                <div class="integration-card">
+                    <div class="integration-icon">💳</div>
+                    <p><strong>ЮKassa</strong><br>Приём платежей</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">📦</div>
+                    <p><strong>СДЭК</strong><br>Доставка по РФ</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">🤖</div>
+                    <p><strong>Telegram</strong><br>Бот уведомления</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">📊</div>
+                    <p><strong>Wildberries</strong><br>Маркетплейс</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">🛒</div>
+                    <p><strong>Ozon</strong><br>Маркетплейс</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">📧</div>
+                    <p><strong>Email</strong><br>Рассылки</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">🔔</div>
+                    <p><strong>WebSocket</strong><br>Уведомления</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon">🤖</div>
+                    <p><strong>AI Ассистент</strong><br>Помощник</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section id="contact" style="padding: 80px 0; text-align: center;">
+    <section class="cta" id="cta">
         <div class="container">
-            <h2 style="font-size: 36px; margin-bottom: 20px;">Связаться с нами</h2>
-            <p style="margin-bottom: 30px; font-size: 18px;">Ответим за 24 часа</p>
-            <a href="mailto:support@myshop.com" class="btn btn-primary">support@myshop.com</a>
-            <a href="https://t.me/myshop_support" class="btn btn-secondary" style="margin-left: 15px;">Telegram</a>
+            <h2>Готовы начать?</h2>
+            <p>Запустите свой интернет-магазин прямо сейчас</p>
+            <a href="mailto:support@myshop.com" class="btn">Связаться с нами</a>
         </div>
     </section>
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 MyShop. Все права защищены.</p>
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <span class="logo">MyShop</span>
+                    <p>Платформа для интернет-магазинов. Мульти-тенант, оплата, доставка, аналитика.</p>
+                </div>
+                <div>
+                    <h4>Продукт</h4>
+                    <a href="#features">Возможности</a>
+                    <a href="#pricing">Тарифы</a>
+                    <a href="#integrations">Интеграции</a>
+                </div>
+                <div>
+                    <h4>Поддержка</h4>
+                    <a href="mailto:support@myshop.com">Email</a>
+                    <a href="https://t.me/myshop_support">Telegram</a>
+                </div>
+                <div>
+                    <h4>Документация</h4>
+                    <a href="/docs">API Swagger</a>
+                    <a href="/health">Статус</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 MyShop. Все права защищены.</p>
+            </div>
         </div>
     </footer>
+    <!-- Register Modal -->
+    <div id="registerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:16px;padding:40px;max-width:440px;width:90%;position:relative;max-height:90vh;overflow-y:auto;">
+            <button onclick="closeRegister()" style="position:absolute;top:15px;right:20px;background:none;border:none;font-size:24px;cursor:pointer;color:#64748b;">&times;</button>
+            <h2 style="margin:0 0 5px;font-size:24px;">Создать магазин</h2>
+            <p style="color:#64748b;margin:0 0 25px;font-size:14px;">Бесплатно 14 дней. Без карты.</p>
+
+            <div id="regError" style="display:none;background:#fef2f2;color:#dc2626;padding:10px 15px;border-radius:8px;margin-bottom:15px;font-size:14px;"></div>
+
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <input type="hidden" id="regPlan" value="starter">
+
+                <label style="display:block;margin-bottom:15px;">
+                    <span style="display:block;font-size:14px;font-weight:500;margin-bottom:5px;">Название магазина</span>
+                    <input id="regStoreName" type="text" placeholder="Мой магазин" required
+                        style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box;"
+                        oninput="autoSlug()">
+                </label>
+
+                <label style="display:block;margin-bottom:15px;">
+                    <span style="display:block;font-size:14px;font-weight:500;margin-bottom:5px;">Адрес магазина</span>
+                    <div style="display:flex;align-items:center;">
+                        <input id="regSlug" type="text" placeholder="moj-magazin" required
+                            style="flex:1;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px 0 0 8px;font-size:15px;box-sizing:border-box;">
+                        <span style="padding:10px 12px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:0 8px 8px 0;font-size:14px;color:#64748b;white-space:nowrap;">.myshop.com</span>
+                    </div>
+                </label>
+
+                <label style="display:block;margin-bottom:15px;">
+                    <span style="display:block;font-size:14px;font-weight:500;margin-bottom:5px;">Email</span>
+                    <input id="regEmail" type="email" placeholder="you@example.com" required
+                        style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box;">
+                </label>
+
+                <label style="display:block;margin-bottom:15px;">
+                    <span style="display:block;font-size:14px;font-weight:500;margin-bottom:5px;">Логин</span>
+                    <input id="regUsername" type="text" placeholder="admin" required
+                        style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box;">
+                </label>
+
+                <label style="display:block;margin-bottom:20px;">
+                    <span style="display:block;font-size:14px;font-weight:500;margin-bottom:5px;">Пароль</span>
+                    <input id="regPassword" type="password" placeholder="Минимум 6 символов" required minlength="6"
+                        style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;box-sizing:border-box;">
+                </label>
+
+                <button type="submit" id="regSubmit" class="btn btn-primary" style="width:100%;text-align:center;border:none;cursor:pointer;font-size:16px;">
+                    Создать магазин
+                </button>
+            </form>
+
+            <p style="text-align:center;margin-top:20px;font-size:13px;color:#94a3b8;">
+                Уже есть аккаунт? <a href="/" style="color:#3b82f6;text-decoration:none;">Войти</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+    const API = window.location.hostname === 'localhost'
+        ? 'http://localhost:8000'
+        : 'https://' + window.location.hostname;
+
+    function openRegister(plan) {
+        document.getElementById('registerModal').style.display = 'flex';
+        if (plan) document.getElementById('regPlan').value = plan;
+        document.getElementById('regError').style.display = 'none';
+    }
+
+    function closeRegister() {
+        document.getElementById('registerModal').style.display = 'none';
+    }
+
+    function autoSlug() {
+        const name = document.getElementById('regStoreName').value;
+        const slug = name.toLowerCase()
+            .replace(/[^a-z0-9а-яё]+/g, '-')
+            .replace(/^-|-$/g, '')
+            .replace(/[а-яё]/g, '');
+        document.getElementById('regSlug').value = slug || '';
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const btn = document.getElementById('regSubmit');
+        const errDiv = document.getElementById('regError');
+        btn.disabled = true;
+        btn.textContent = 'Создаю...';
+        errDiv.style.display = 'none';
+
+        const data = {
+            username: document.getElementById('regUsername').value,
+            password: document.getElementById('regPassword').value,
+            email: document.getElementById('regEmail').value,
+            store_name: document.getElementById('regStoreName').value,
+            slug: document.getElementById('regSlug').value,
+            plan: document.getElementById('regPlan').value,
+        };
+
+        try {
+            const res = await fetch(API + '/register-store', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data),
+            });
+            const json = await res.json();
+
+            if (!res.ok) {
+                errDiv.textContent = json.detail || 'Ошибка регистрации';
+                errDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Создать магазин';
+                return;
+            }
+
+            // Save tokens
+            localStorage.setItem('accessToken', json.access_token);
+            localStorage.setItem('currentUser', json.username);
+            localStorage.setItem('currentRole', 'admin');
+            localStorage.setItem('currentUserId', json.user_id);
+            localStorage.setItem('tenant_id', json.tenant_id);
+
+            // Redirect to onboarding
+            window.location.href = '/onboarding.html?slug=' + json.slug + '&store=' + encodeURIComponent(data.store_name);
+        } catch (err) {
+            errDiv.textContent = 'Сервер недоступен. Попробуйте позже.';
+            errDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Создать магазин';
+        }
+    }
+
+    // Close modal on outside click
+    document.getElementById('registerModal').addEventListener('click', function(e) {
+        if (e.target === this) closeRegister();
+    });
+    </script>
 </body>
 </html>

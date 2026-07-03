@@ -1495,12 +1495,112 @@ function adminTab(tab) {
     localStorage.setItem('lastAdminTab', tab);
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`.admin-tab[onclick="adminTab('${tab}')"]`).classList.add('active');
-    if (tab === 'stats') loadAdminStats();
+    if (tab === 'guide') loadGuideTab();
+    else if (tab === 'stats') loadAdminStats();
     else if (tab === 'products') loadAdminProducts();
     else if (tab === 'users') loadAdminUsers();
     else if (tab === 'rbac') loadRbacTab();
     else if (tab === 'orders') loadAdminOrders();
     else if (tab === 'store') loadStoreSettings();
+}
+
+function loadGuideTab() {
+    const content = document.getElementById('admin-content');
+    content.innerHTML = `
+        <div style="max-width:800px;">
+            <div style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:16px;padding:30px;color:#fff;margin-bottom:24px;">
+                <h2 style="margin:0 0 8px;font-size:24px;">Добро пожаловать в MyShop!</h2>
+                <p style="margin:0;opacity:0.9;">Ваш магазин создан. Вот что нужно сделать дальше.</p>
+            </div>
+
+            <div style="display:grid;gap:16px;">
+
+                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">
+                    <h3 style="margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#dbeafe;color:#2563eb;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">1</span>
+                        О платформе
+                    </h3>
+                    <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0 0 12px;">
+                        MyShop — это готовая платформа для интернет-магазина. Вам не нужно программировать.
+                        Всё уже работает: каталог, корзина, оплата, доставка, аналитика.
+                    </p>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+                        <div style="background:#f8fafc;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:24px;">📦</div>
+                            <div style="font-size:13px;font-weight:500;">Каталог</div>
+                        </div>
+                        <div style="background:#f8fafc;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:24px;">💳</div>
+                            <div style="font-size:13px;font-weight:500;">Оплата</div>
+                        </div>
+                        <div style="background:#f8fafc;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:24px;">🚚</div>
+                            <div style="font-size:13px;font-weight:500;">Доставка</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">
+                    <h3 style="margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#dcfce7;color:#16a34a;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">2</span>
+                        Добавьте товары
+                    </h3>
+                    <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0 0 12px;">
+                        Товары — основа вашего магазина. Добавьте фото, название, описание и цену.
+                        Покупатели смогут найти их через поиск и фильтры.
+                    </p>
+                    <button class="btn-sm primary" onclick="adminTab('products')" style="margin-top:4px;">
+                        <i class="fas fa-plus"></i> Перейти к товарам
+                    </button>
+                </div>
+
+                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">
+                    <h3 style="margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#fef3c7;color:#d97706;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">3</span>
+                        Настройте дизайн
+                    </h3>
+                    <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0 0 12px;">
+                        Выберите тему, загрузите логотип, напишите название магазина.
+                        Всё настраивается в одном месте.
+                    </p>
+                    <button class="btn-sm primary" onclick="adminTab('store')" style="margin-top:4px;">
+                        <i class="fas fa-palette"></i> Настроить дизайн
+                    </button>
+                </div>
+
+                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">
+                    <h3 style="margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#ede9fe;color:#7c3aed;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">4</span>
+                        Подключите оплату
+                    </h3>
+                    <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0 0 12px;">
+                        Чтобы принимать платежи, добавьте ключи ЮKassa в настройки.
+                        Клиенты смогут платить картой, СБП.
+                    </p>
+                    <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-top:8px;font-size:13px;color:#64748b;">
+                        <strong>Что нужно:</strong> Зарегистрируйтесь на <a href="https://yookassa.ru" target="_blank" style="color:#3b82f6;">yookassa.ru</a>,
+                        возьмите ключи из настроек магазина.
+                    </div>
+                </div>
+
+                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">
+                    <h3 style="margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+                        <span style="background:#fee2e2;color:#dc2626;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">5</span>
+                        Запустите продажи!
+                    </h3>
+                    <p style="color:#64748b;font-size:14px;line-height:1.7;margin:0;">
+                        После добавления товаров и настройки оплаты — ваш магазин готов к продажам!
+                        Делитесь ссылкой с клиентами.
+                    </p>
+                    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                        <a href="/" target="_blank" class="btn-sm primary"><i class="fas fa-external-link-alt"></i> Открыть магазин</a>
+                        <button class="btn-sm" onclick="adminTab('stats')"><i class="fas fa-chart-line"></i> Статистика</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
 }
 
 async function loadAdminStats() {
@@ -2198,6 +2298,14 @@ async function changeOrderStatus(orderId, status) {
 }
 /* ─── Store Settings ─── */
 const THEME_NAMES = { midnight: 'Midnight', light: 'Light', nature: 'Nature', rose: 'Rose', cyber: 'Cyber', minimal: 'Minimal' };
+const THEME_COLORS = {
+    midnight: ['#0f172a','#3b82f6'],
+    light: ['#f8fafc','#3b82f6'],
+    nature: ['#059669','#10b981'],
+    rose: ['#e11d48','#f43f5e'],
+    cyber: ['#7c3aed','#a855f7'],
+    minimal: ['#fafafa','#737373'],
+};
 
 async function loadStoreSettings() {
     const content = document.getElementById('admin-content');
@@ -2206,12 +2314,13 @@ async function loadStoreSettings() {
         const res = await api('/api/store/settings');
         if (!res.ok) throw new Error();
         const s = await res.json();
-        const themeOptions = THEMES.map(t =>
-            `<div class="theme-pick ${s.theme === t ? 'active' : ''}" data-theme="${t}" onclick="previewTheme('${t}')">
-                <span class="theme-dot" style="background:linear-gradient(135deg,var(--primary-color),var(--secondary-color))"></span>
+        const themeOptions = THEMES.map(t => {
+            const [bg, accent] = THEME_COLORS[t] || ['#333','#3b82f6'];
+            return `<div class="theme-pick ${s.theme === t ? 'active' : ''}" data-theme="${t}" onclick="previewTheme('${t}')">
+                <span class="theme-dot" style="background:linear-gradient(135deg,${bg},${accent})"></span>
                 ${THEME_NAMES[t]}
-            </div>`
-        ).join('');
+            </div>`;
+        }).join('');
         content.innerHTML = `
             <div class="profile-form-card" style="max-width:600px;">
                 <h3>Настройки магазина</h3>

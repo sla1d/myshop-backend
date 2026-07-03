@@ -204,6 +204,133 @@ async def register(
     return {"status": "ok"}
 
 
+class RegisterStoreRequest(BaseModel):
+    username: str
+    password: str
+    email: str
+    store_name: str
+    slug: str
+    plan: str = "starter"
+
+
+class RegisterStoreResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    user_id: int
+    tenant_id: int
+    slug: str
+    store_url: str
+    plan: str
+
+
+@router.post("/register-store", response_model=RegisterStoreResponse)
+@limiter.limit("3/minute")
+async def register_store(
+    request: Request,
+    body: RegisterStoreRequest,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Self-service: register + create store + get tokens. One step."""
+    import re
+    from app.models.license import Tenant, License, PLANS
+    from app.rbac.models import UserRole, Role
+    from sqlalchemy import select as sel
+
+    # Validate
+    if not body.username or not body.password or not body.email:
+        raise HTTPException(400, "Username, password и email обязательны")
+    if not body.store_name or not body.slug:
+        raise HTTPException(400, "Название магазина и slug обязательны")
+    if body.plan not in PLANS:
+        raise HTTPException(400, f"План: {', '.join(PLANS.keys())}")
+    if not re.match(r"^[a-z0-9-]+$", body.slug):
+        raise HTTPException(400, "Slug: только латиница, цифры и дефис")
+
+    # Check duplicates
+    existing_user = await session.execute(select(User).where(User.username == body.username))
+    if existing_user.scalar_one_or_none():
+        raise HTTPException(400, "Пользователь уже существует")
+
+    existing_email = await session.execute(select(User).where(User.email == body.email))
+    if existing_email.scalar_one_or_none():
+        raise HTTPException(400, "Email уже используется")
+
+    existing_slug = await session.execute(sel(Tenant).where(Tenant.slug == body.slug))
+    if existing_slug.scalar_one_or_none():
+        raise HTTPException(400, "Этот адрес магазина уже занят")
+
+    plan_config = PLANS[body.plan]
+    now = datetime.now(timezone.utc)
+
+    # 1. Create tenant (store)
+    tenant = Tenant(
+        name=body.store_name,
+        slug=body.slug,
+        domain=f"{body.slug}.myshop.com",
+        plan=body.plan,
+        subscription_status="active",
+        subscription_expires_at=now + timedelta(days=14),
+        theme="midnight",
+        store_name=body.store_name,
+    )
+    session.add(tenant)
+    await session.flush()
+
+    # 2. Create license
+    license = License(
+        tenant_id=tenant.id,
+        key=f"{body.slug}-{tenant.id:06d}",
+        plan=body.plan,
+        expires_at=now + timedelta(days=14),
+        max_products=plan_config["max_products"],
+        max_orders=plan_config["max_orders"],
+        max_images=plan_config["max_images"],
+        max_admins=plan_config["max_admins"],
+        active=True,
+    )
+    session.add(license)
+
+    # 3. Create user
+    user = User(
+        username=body.username,
+        password=hash_password(body.password),
+        role="admin",
+        email=body.email,
+        tenant_id=tenant.id,
+    )
+    session.add(user)
+    await session.flush()
+
+    # 4. Assign owner role (all 28 permissions)
+    role_result = await session.execute(sel(Role).where(Role.name == "owner"))
+    owner_role = role_result.scalar_one_or_none()
+    if owner_role:
+        session.add(UserRole(user_id=user.id, tenant_id=tenant.id, role_id=owner_role.id))
+
+    # 5. Create subscription
+    from app.billing.service import BillingService
+    billing = BillingService(session)
+    await billing.create_subscription(tenant_id=tenant.id, plan=body.plan)
+
+    # 6. Generate tokens
+    access = create_access_token({"sub": str(user.id)})
+    refresh_token, _ = await _create_refresh_token(session, user.id, request.client.host if request.client else "")
+
+    await session.commit()
+    logger.info("Store registered: %s (slug=%s, plan=%s, user=%s)", body.store_name, body.slug, body.plan, body.username)
+
+    return RegisterStoreResponse(
+        access_token=access,
+        refresh_token=refresh_token,
+        user_id=user.id,
+        tenant_id=tenant.id,
+        slug=tenant.slug,
+        store_url=f"https://{tenant.domain}",
+        plan=body.plan,
+    )
+
+
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("5/minute")
 async def login(

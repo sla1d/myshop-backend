@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0f172a;font-family:Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;background:#1e293b;border-radius:16px;overflow:hidden;margin-top:20px;margin-bottom:20px;">
+    <div style="background:linear-gradient(135deg,#06b6d4,#3b82f6);padding:30px;text-align:center;">
+        <h1 style="color:#fff;margin:0;font-size:24px;">🚚 Заказ отправлен!</h1>
+    </div>
+    <div style="padding:30px;color:#e2e8f0;">
+        <h2 style="color:#3b82f6;margin-top:0;">Заказ #{{order_id}}</h2>
+        <p>Здравствуйте, {{username}}!</p>
+        <p>Ваш заказ передан в службу доставки.</p>
+        <div style="background:#0f172a;border-radius:8px;padding:15px;margin:15px 0;">
+            {% if tracking_number %}
+            <p style="margin:5px 0;"><strong>Трек-номер:</strong> <code style="background:#334155;padding:3px 8px;border-radius:4px;">{{tracking_number}}</code></p>
+            {% endif %}
+            {% if carrier %}
+            <p style="margin:5px 0;"><strong>Перевозчик:</strong> {{carrier}}</p>
+            {% endif %}
+            {% if estimated_delivery %}
+            <p style="margin:5px 0;"><strong>Ожидаемая доставка:</strong> {{estimated_delivery}}</p>
+            {% endif %}
+            <p style="margin:5px 0;"><strong>Адрес:</strong> {{address}}</p>
+        </div>
+        {% if tracking_url %}
+        <div style="text-align:center;margin:20px 0;">
+            <a href="{{tracking_url}}" style="background:#06b6d4;color:#fff;padding:12px 30px;border-radius:8px;text-decoration:none;font-weight:bold;">Отследить доставку</a>
+        </div>
+        {% endif %}
+    </div>
+    <div style="background:#0f172a;padding:20px;text-align:center;color:#64748b;font-size:12px;">
+        <p style="margin:0;">© 2024 {{store_name}}. Все права защищены.</p>
+    </div>
+</div>
+</body>
+</html>

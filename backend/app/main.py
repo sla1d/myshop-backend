@@ -343,11 +343,34 @@ Authorization: Bearer <access_token>
 
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
+    LANDING_DIR = Path(__file__).resolve().parent.parent.parent / "landing"
+
     @app.get("/", response_class=HTMLResponse)
     async def index():
         """Отдаём главную страницу."""
         html_path = FRONTEND_DIR / "index.html"
         return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+
+    @app.get("/onboarding.html", response_class=HTMLResponse)
+    async def onboarding_page():
+        html_path = LANDING_DIR / "onboarding.html"
+        if html_path.exists():
+            return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+        return HTMLResponse(content="Not found", status_code=404)
+
+    @app.get("/dashboard.html", response_class=HTMLResponse)
+    async def dashboard_page():
+        html_path = LANDING_DIR / "dashboard.html"
+        if html_path.exists():
+            return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+        return HTMLResponse(content="Not found", status_code=404)
+
+    @app.get("/landing/", response_class=HTMLResponse)
+    async def landing_page():
+        html_path = LANDING_DIR / "index.html"
+        if html_path.exists():
+            return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+        return HTMLResponse(content="Not found", status_code=404)
 
     return app
 
